@@ -335,3 +335,33 @@ test('product gallery details provide 10 model preview images per pack', async (
   }
 });
 
+test('home hero carousel renders multiple product slides and controls', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+
+  const storefrontSrc = fs.readFileSync(path.join(process.cwd(), 'public', 'legacy', 'storefront.js'), 'utf8');
+  const storeCss = fs.readFileSync(path.join(process.cwd(), 'app', 'store.css'), 'utf8');
+
+  // Verify carousel logic and structure
+  assert.ok(storefrontSrc.includes('initHeroCarousel'), 'initHeroCarousel should be defined');
+  assert.ok(storefrontSrc.includes('hero-carousel'), 'hero-carousel element should be generated');
+  assert.ok(storefrontSrc.includes('hero-slide'), 'hero-slide elements should be generated');
+  assert.ok(storefrontSrc.includes('hero-carousel-arrow prev'), 'previous arrow button should exist');
+  assert.ok(storefrontSrc.includes('hero-carousel-arrow next'), 'next arrow button should exist');
+  assert.ok(storefrontSrc.includes('hero-carousel-dots'), 'pagination dots should exist');
+  assert.ok(storefrontSrc.includes('clearInterval(heroCarouselInterval)'), 'timer cleanup should be handled');
+
+  // Verify styling
+  assert.ok(storeCss.includes('.hero-carousel-viewport'), 'carousel viewport styles should exist');
+  assert.ok(storeCss.includes('.hero-slide.is-active'), 'active slide transition should exist');
+  assert.ok(storeCss.includes('.hero-slide-badge'), 'product badge overlay should exist');
+  assert.ok(storeCss.includes('.hero-dot.is-active'), 'active dot styles should exist');
+
+  // Verify strict no emoji rule in carousel section
+  const heroMatch = storefrontSrc.match(/function initHeroCarousel[\s\S]*?function catalog/);
+  assert.ok(heroMatch, 'carousel code block found');
+  const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u;
+  assert.equal(emojiRegex.test(heroMatch[0]), false, 'Hero carousel must have zero emojis');
+});
+
+

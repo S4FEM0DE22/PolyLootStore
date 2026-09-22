@@ -38,45 +38,13 @@ html[data-theme='dark'] .settings-dropdown-links .settings-shortcut { background
 html[data-theme='dark'] .settings-dropdown-links .settings-shortcut:hover { background:#355640 !important; border-color:#6d9475 !important; }
 html[data-theme='dark'] .settings-shortcut-copy small { color:var(--muted) !important; }
 html[data-theme='dark'] .settings-shortcut-icon { background:#355640 !important; color:#c0e2c3 !important; }
-html[data-theme='dark'] .hero-rotator-img {
-  border-color: #284232 !important;
-  background: #17261e !important;
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5) !important;
-}
-html[data-theme='dark'] .hero-rotator-badge {
-  background: rgba(23, 38, 30, 0.94) !important;
-  border-color: #365044 !important;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
-}
-html[data-theme='dark'] .hero-rotator-tag {
-  background: #2b4736 !important;
-  color: #a5d1aa !important;
-}
-html[data-theme='dark'] .hero-rotator-price {
-  color: #c0e2c3 !important;
-}
-html[data-theme='dark'] .hero-rotator-badge-title {
-  color: var(--ink) !important;
-}
-html[data-theme='dark'] .hero-rotator-badge-sub {
-  color: var(--muted) !important;
-}
-html[data-theme='dark'] .hero-rotator-arrow {
-  background: #24362b !important;
-  color: var(--ink) !important;
-  border-color: #365044 !important;
-}
-html[data-theme='dark'] .hero-rotator-arrow:hover {
-  background: #355640 !important;
-  border-color: #a5d1aa !important;
-}
-html[data-theme='dark'] .hero-rotator-counter {
-  background: #24362b !important;
-  color: var(--ink) !important;
-  border-color: #365044 !important;
-}
-html[data-theme='dark'] .hero-rotator-progress {
-  background: #a5d1aa !important;
-}
+html[data-theme='dark'] .hero-slide-card img { background: #1b2923 !important; border-color: #2b4534 !important; box-shadow: 0 24px 45px rgba(0,0,0,0.45) !important; }
+html[data-theme='dark'] .hero-slide-badge { background: rgba(16, 26, 21, 0.94) !important; border-color: rgba(165, 209, 170, 0.4) !important; }
+html[data-theme='dark'] .hero-badge-title { color: var(--ink) !important; }
+html[data-theme='dark'] .hero-badge-cat { color: #a5d1aa !important; background: rgba(165, 209, 170, 0.15) !important; }
+html[data-theme='dark'] .hero-badge-price { color: #a5d1aa !important; }
+html[data-theme='dark'] .hero-carousel-arrow { background: #1b2923 !important; border-color: var(--border) !important; color: var(--ink) !important; }
+html[data-theme='dark'] .hero-carousel-arrow:hover { background: #355640 !important; color: #fff !important; }
+html[data-theme='dark'] .hero-dot { background: rgba(165, 209, 170, 0.25) !important; }
+html[data-theme='dark'] .hero-dot.is-active { background: #a5d1aa !important; }
 @media print { html[data-theme='dark'] body, html[data-theme='dark'] .status-panel { background: white !important; color: black !important; } }
-

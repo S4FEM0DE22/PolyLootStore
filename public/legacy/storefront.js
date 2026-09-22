@@ -187,10 +187,7 @@ function setView(html, active = '') {
   closeMobileMenu();
   clearActiveFocus();
   clearInterval(carouselInterval);
-  if (heroRotatorInterval) {
-    clearInterval(heroRotatorInterval);
-    heroRotatorInterval = null;
-  }
+  clearInterval(heroCarouselInterval);
   app.innerHTML = html;
   const isAuth = active === 'login' || active === 'register';
   document.body.classList.toggle('auth-active', isAuth);
@@ -249,141 +246,112 @@ function productCard(item) {
   return `<article class="product-card"><a class="product-cover" href="#asset/${esc(item.id)}" aria-label="ดูรายละเอียด ${esc(item.title)}">${cover(item)}<span class="card-type-tag">3D ASSET</span></a><div class="product-copy"><div class="card-meta-top"><span class="product-category">${esc(item.category || '3D Asset')}</span><span class="card-engine-tag">Unity · UE · Godot</span></div><h3><a href="#asset/${esc(item.id)}">${esc(item.title)}</a></h3><p class="product-description">${esc(item.description)}</p><div class="product-specs">${formatBadges}<span class="spec-badge license-badge">${esc(item.license || 'CC0 1.0')}</span></div><div class="product-bottom"><strong>${money(item.price)} <small>ราคาเดโม</small></strong><button class="pill-button dark" type="button" data-add="${esc(item.id)}">เพิ่มลงตะกร้า</button></div></div></article>`;
 }
 
-let heroRotatorInterval = null;
-
-function initHeroRotator() {
-  if (heroRotatorInterval) {
-    clearInterval(heroRotatorInterval);
-    heroRotatorInterval = null;
+function recommendedCard(item, index, total) {
+  const isVisible = index === 0 || index === 1 || index === total - 1;
+  let initClass = '';
+  if (total > 0) {
+    if (index === 0) initClass = ' center';
+    else if (index === 1 || (total === 2 && index === 1)) initClass = ' next';
+    else if (index === total - 1) initClass = ' prev';
+    else if (index > total / 2) initClass = ' hidden-left';
+    else initClass = ' hidden-right';
   }
-  const rotator = document.getElementById('hero-rotator');
-  if (!rotator) return;
-  const slides = Array.from(rotator.querySelectorAll('.hero-rotator-slide'));
-  const total = slides.length;
-  if (total <= 1) return;
+  return `<a class="recommended-item${initClass}" data-index="${index}" href="#asset/${esc(item.id)}" title="${esc(item.title)}"><div class="recommended-cover-wrap">${cover(item, isVisible)}</div><div class="recommended-title"><h3>${esc(item.title)}</h3></div></a>`;
+}
 
-  const curEl = document.getElementById('hero-rotator-cur');
-  const prevBtn = rotator.querySelector('.hero-rotator-arrow.prev');
-  const nextBtn = rotator.querySelector('.hero-rotator-arrow.next');
-  const progressBar = rotator.querySelector('.hero-rotator-progress');
+let heroCarouselInterval = null;
 
+function initHeroCarousel(total) {
+  clearInterval(heroCarouselInterval);
+  const carousel = document.getElementById('hero-carousel');
+  if (!carousel || total <= 1) return;
+
+  const slides = Array.from(carousel.querySelectorAll('.hero-slide'));
+  const dots = Array.from(carousel.querySelectorAll('.hero-dot'));
+  const prevBtn = carousel.querySelector('.hero-carousel-arrow.prev');
+  const nextBtn = carousel.querySelector('.hero-carousel-arrow.next');
   let currentIndex = 0;
   let isPaused = false;
-  let swiped = false;
   const isReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  function resetProgress() {
-    if (!progressBar) return;
-    progressBar.style.animation = 'none';
-    void progressBar.offsetWidth;
-    if (!isReduced && !isPaused) {
-      progressBar.style.animation = 'hero-rotator-progress 3.5s linear infinite';
-    }
-  }
+  function goToSlide(newIndex, direction = 1) {
+    if (newIndex === currentIndex) return;
+    const oldIndex = currentIndex;
+    currentIndex = (newIndex + total) % total;
 
-  function goToSlide(nextIndex, direction = 'next') {
-    if (nextIndex === currentIndex) return;
-    const oldSlide = slides[currentIndex];
-    currentIndex = (nextIndex + total) % total;
-    const newSlide = slides[currentIndex];
-
-    slides.forEach(slide => {
-      slide.classList.remove('active', 'exit-left', 'exit-right', 'enter-left', 'enter-right');
+    slides.forEach((slide, idx) => {
+      slide.classList.remove('is-active', 'is-prev', 'is-next');
+      if (idx === currentIndex) {
+        slide.classList.add('is-active');
+      } else if (idx === oldIndex) {
+        slide.classList.add(direction > 0 ? 'is-prev' : 'is-next');
+      }
     });
 
-    if (direction === 'next') {
-      oldSlide.classList.add('exit-left');
-      newSlide.classList.add('enter-right', 'active');
-    } else {
-      oldSlide.classList.add('exit-right');
-      newSlide.classList.add('enter-left', 'active');
-    }
-
-    requestAnimationFrame(() => {
-      newSlide.classList.remove('enter-right', 'enter-left');
+    dots.forEach((dot, idx) => {
+      const active = idx === currentIndex;
+      dot.classList.toggle('is-active', active);
+      dot.setAttribute('aria-selected', String(active));
     });
-
-    if (curEl) curEl.textContent = String(currentIndex + 1);
-    resetProgress();
   }
 
-  function next() {
-    goToSlide(currentIndex + 1, 'next');
+  function nextSlide() {
+    goToSlide(currentIndex + 1, 1);
   }
 
-  function prev() {
-    goToSlide(currentIndex - 1, 'prev');
+  function prevSlide() {
+    goToSlide(currentIndex - 1, -1);
   }
 
   function resetTimer() {
-    if (heroRotatorInterval) {
-      clearInterval(heroRotatorInterval);
-      heroRotatorInterval = null;
-    }
-    resetProgress();
+    clearInterval(heroCarouselInterval);
     if (!isReduced) {
-      heroRotatorInterval = setInterval(() => {
-        if (!document.getElementById('hero-rotator')) {
-          clearInterval(heroRotatorInterval);
-          heroRotatorInterval = null;
+      heroCarouselInterval = setInterval(() => {
+        if (!document.getElementById('hero-carousel')) {
+          clearInterval(heroCarouselInterval);
           return;
         }
         if (!isPaused && document.visibilityState === 'visible') {
-          next();
+          nextSlide();
         }
       }, 3500);
     }
   }
 
-  prevBtn?.addEventListener('click', event => {
-    event.preventDefault();
-    prev();
+  prevBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    prevSlide();
     resetTimer();
   });
 
-  nextBtn?.addEventListener('click', event => {
-    event.preventDefault();
-    next();
+  nextBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    nextSlide();
     resetTimer();
   });
 
-  rotator.addEventListener('pointerenter', () => {
-    isPaused = true;
-    if (progressBar) progressBar.style.animationPlayState = 'paused';
+  dots.forEach(dot => {
+    dot.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const targetIdx = parseInt(dot.dataset.heroDot, 10);
+      if (!Number.isNaN(targetIdx)) {
+        goToSlide(targetIdx, targetIdx > currentIndex ? 1 : -1);
+        resetTimer();
+      }
+    });
   });
 
-  rotator.addEventListener('pointerleave', () => {
-    isPaused = false;
-    if (progressBar) progressBar.style.animationPlayState = 'running';
-  });
-
-  rotator.addEventListener('focusin', () => {
-    isPaused = true;
-    if (progressBar) progressBar.style.animationPlayState = 'paused';
-  });
-
-  rotator.addEventListener('focusout', () => {
-    isPaused = false;
-    if (progressBar) progressBar.style.animationPlayState = 'running';
-  });
-
-  rotator.addEventListener('keydown', event => {
-    if (event.key === 'ArrowLeft') {
-      event.preventDefault();
-      prev();
-      resetTimer();
-    } else if (event.key === 'ArrowRight') {
-      event.preventDefault();
-      next();
-      resetTimer();
-    }
-  });
+  carousel.addEventListener('pointerenter', () => { isPaused = true; });
+  carousel.addEventListener('pointerleave', () => { isPaused = false; });
+  carousel.addEventListener('focusin', () => { isPaused = true; });
+  carousel.addEventListener('focusout', () => { isPaused = false; });
 
   let touchStartX = 0;
   let touchStartY = 0;
   let isTouching = false;
+  let swiped = false;
 
-  rotator.addEventListener('touchstart', event => {
+  carousel.addEventListener('touchstart', (event) => {
     if (event.touches.length === 1) {
       touchStartX = event.touches[0].clientX;
       touchStartY = event.touches[0].clientY;
@@ -393,36 +361,26 @@ function initHeroRotator() {
     }
   }, { passive: true });
 
-  rotator.addEventListener('touchend', event => {
+  carousel.addEventListener('touchend', (event) => {
     if (!isTouching || !event.changedTouches.length) {
       isPaused = false;
       resetTimer();
       return;
     }
+    const deltaX = event.changedTouches[0].clientX - touchStartX;
+    const deltaY = event.changedTouches[0].clientY - touchStartY;
     isTouching = false;
     isPaused = false;
 
-    const deltaX = event.changedTouches[0].clientX - touchStartX;
-    const deltaY = event.changedTouches[0].clientY - touchStartY;
-
     if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY)) {
       swiped = true;
-      if (deltaX < 0) {
-        next();
-      } else {
-        prev();
-      }
+      if (deltaX < 0) nextSlide();
+      else prevSlide();
     }
     resetTimer();
   }, { passive: true });
 
-  rotator.addEventListener('touchcancel', () => {
-    isTouching = false;
-    isPaused = false;
-    resetTimer();
-  }, { passive: true });
-
-  rotator.addEventListener('click', event => {
+  carousel.addEventListener('click', (event) => {
     if (swiped) {
       event.preventDefault();
       event.stopPropagation();
@@ -436,15 +394,134 @@ function initHeroRotator() {
 function home() {
   const featured = assets.filter(item => item.is_featured);
   const displayAssets = (featured.length ? featured : assets).slice(0, 5);
-  const rotatorItems = (assets.length ? assets : displayAssets).filter(item => item.cover);
   const categories = [['Characters','ตัวละคร'],['Environments','ฉากและพื้นที่'],['Weapons','อาวุธ'],['Vehicles','ยานพาหนะ'],['Props','สิ่งของประกอบ']];
+  const heroAssets = (assets.filter(item => item.cover).length ? assets.filter(item => item.cover) : assets).slice(0, 10);
   setView(`
-    <section class="home-hero"><div class="home-hero-copy"><span class="home-eyebrow">POLYLOOT / 3D GAME ASSETS</span><h1>หาแอสเซ็ตที่ใช่<br>แล้วสร้างเกมของคุณ</h1><p>โมเดล 3D คุณภาพสูงสำหรับนักพัฒนาเกม เลือกดูรายละเอียดสเปกไฟล์ ทดลองสั่งซื้อ และรับไฟล์ในคลังของคุณได้ทันที</p><div class="hero-actions"><a class="pill-button dark" href="#catalog">เลือกดูสินค้า <span aria-hidden="true">↗</span></a><a class="hero-text-link" href="#library">ไปที่คลังของฉัน →</a></div><div class="dev-stats-strip"><div class="dev-stat-box"><span class="stat-value">34+</span><span class="stat-caption">Game Packs</span></div><div class="dev-stat-box"><span class="stat-value">1,500+</span><span class="stat-caption">3D Models</span></div><div class="dev-stat-box"><span class="stat-value">Unity · UE · Godot</span><span class="stat-caption">Compatible</span></div><div class="dev-stat-box"><span class="stat-value">CC0 1.0</span><span class="stat-caption">Royalty-Free</span></div></div><p class="hero-disclaimer">ร้านสาธิตเพื่อการศึกษา · ราคาจำลอง · ไฟล์ต้นฉบับคุณภาพจาก Kenney</p></div><div class="home-hero-art"><div class="hero-rotator" id="hero-rotator" role="region" aria-roledescription="carousel" aria-label="ภาพตัวอย่างสินค้าในร้าน" tabindex="0"><div class="hero-rotator-viewport"><div class="hero-rotator-progress" aria-hidden="true"></div>${rotatorItems.map((item, idx) => `<a class="hero-rotator-slide${idx === 0 ? ' active' : ''}" href="#asset/${esc(item.id)}" aria-label="ดูรายละเอียด ${esc(item.title)}"><div class="hero-rotator-card"><img class="hero-rotator-img" src="${esc(item.cover)}" alt="ภาพตัวอย่าง ${esc(item.title)}" ${idx === 0 ? 'fetchpriority="high"' : 'loading="lazy"'}><div class="hero-rotator-badge"><div class="hero-rotator-badge-top"><span class="hero-rotator-tag">${esc(item.category || '3D Asset')}</span><span class="hero-rotator-price">${money(item.price)}</span></div><div class="hero-rotator-badge-title">${esc(item.title)}</div><div class="hero-rotator-badge-sub">ดูรายละเอียดแอสเซ็ต <span aria-hidden="true">→</span></div></div></div></a>`).join('')}</div><div class="hero-rotator-controls"><button type="button" class="hero-rotator-arrow prev" aria-label="สินค้าก่อนหน้า" title="ก่อนหน้า"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button><div class="hero-rotator-counter" aria-live="polite"><span class="hero-rotator-cur" id="hero-rotator-cur">1</span><span class="hero-rotator-sep">/</span><span class="hero-rotator-total">${rotatorItems.length}</span></div><button type="button" class="hero-rotator-arrow next" aria-label="สินค้าถัดไป" title="ถัดไป"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></button></div></div></div></section>
+    <section class="home-hero"><div class="home-hero-copy"><span class="home-eyebrow">POLYLOOT / 3D GAME ASSETS</span><h1>หาแอสเซ็ตที่ใช่<br>แล้วสร้างเกมของคุณ</h1><p>โมเดล 3D คุณภาพสูงสำหรับนักพัฒนาเกม เลือกดูรายละเอียดสเปกไฟล์ ทดลองสั่งซื้อ และรับไฟล์ในคลังของคุณได้ทันที</p><div class="hero-actions"><a class="pill-button dark" href="#catalog">เลือกดูสินค้า <span aria-hidden="true">↗</span></a><a class="hero-text-link" href="#library">ไปที่คลังของฉัน →</a></div><div class="dev-stats-strip"><div class="dev-stat-box"><span class="stat-value">34+</span><span class="stat-caption">Game Packs</span></div><div class="dev-stat-box"><span class="stat-value">1,500+</span><span class="stat-caption">3D Models</span></div><div class="dev-stat-box"><span class="stat-value">Unity · UE · Godot</span><span class="stat-caption">Compatible</span></div><div class="dev-stat-box"><span class="stat-value">CC0 1.0</span><span class="stat-caption">Royalty-Free</span></div></div><p class="hero-disclaimer">ร้านสาธิตเพื่อการศึกษา · ราคาจำลอง · ไฟล์ต้นฉบับคุณภาพจาก Kenney</p></div><div class="home-hero-art"><div class="hero-carousel" id="hero-carousel" aria-label="ภาพตัวอย่างสินค้าในร้าน"><div class="hero-carousel-viewport">${heroAssets.map((item, idx) => `<a class="hero-slide${idx === 0 ? ' is-active' : ''}" href="#asset/${esc(item.id)}" data-hero-index="${idx}" aria-label="ดูรายละเอียด ${esc(item.title)}"><div class="hero-slide-card"><img src="${esc(item.cover)}" alt="ตัวอย่างชุด ${esc(item.title)}" ${idx === 0 ? 'fetchpriority="high"' : 'loading="lazy"'}><div class="hero-slide-badge"><span class="hero-badge-cat">${esc(item.category || '3D Asset')}</span><span class="hero-badge-title">${esc(item.title)}</span><span class="hero-badge-price">${money(item.price)}</span></div></div></a>`).join('')}</div><div class="hero-carousel-bar"><button type="button" class="hero-carousel-arrow prev" aria-label="สินค้าก่อนหน้า"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button><div class="hero-carousel-dots" role="tablist" aria-label="สลับภาพสินค้า">${heroAssets.map((item, idx) => `<button type="button" class="hero-dot${idx === 0 ? ' is-active' : ''}" role="tab" aria-selected="${idx === 0}" aria-label="ดู ${esc(item.title)}" data-hero-dot="${idx}"></button>`).join('')}</div><button type="button" class="hero-carousel-arrow next" aria-label="สินค้าถัดไป"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button></div></div></div></section>
     <section class="home-categories" aria-labelledby="category-heading"><div class="section-title"><h2 id="category-heading">เลือกตามหมวดหมู่</h2><span>3D Assets สำหรับเกม</span></div><div class="category-grid">${categories.map(([id,label], index) => `<a href="#catalog" data-home-category="${id}" class="category-tile"><span class="category-index">0${index + 1}</span><span class="category-name">${label}</span><span class="category-english">${id}</span><span class="category-arrow" aria-hidden="true">↗</span></a>`).join('')}</div></section>
     <section class="home-featured" aria-labelledby="featured-heading"><div class="section-title"><h2 id="featured-heading">สินค้าที่แนะนำ</h2><a class="section-link" href="#catalog">ดูสินค้าทั้งหมด →</a></div><div class="product-grid">${displayAssets.map(productCard).join('')}</div></section>
     <section class="how-it-works" aria-labelledby="how-heading"><div><span class="home-eyebrow">HOW IT WORKS</span><h2 id="how-heading">จากไอเดียสู่ไฟล์พร้อมใช้</h2><p>ขั้นตอนการซื้อใน Mini Project นี้เป็นการจำลอง ไม่มีการเรียกเก็บเงินจริง</p></div><ol><li><span>01</span><strong>ค้นหาแอสเซ็ต</strong><small>กรองหมวดและดูรายละเอียดไฟล์</small></li><li><span>02</span><strong>สั่งซื้อจำลอง</strong><small>บันทึกคำสั่งซื้อและสถานะ</small></li><li><span>03</span><strong>ดาวน์โหลด</strong><small>เข้าถึงไฟล์จากคลังหลังชำระสำเร็จ</small></li></ol></section>
   `, 'home');
-  initHeroRotator();
+  initHeroCarousel(heroAssets.length);
+}
+
+let carouselInterval = null;
+function initCarousel(total) {
+  clearInterval(carouselInterval);
+  const track = document.getElementById('rec-track');
+  if (!track || total === 0) return;
+  const prevBtn = document.querySelector('.rec-arrow.prev');
+  const nextBtn = document.querySelector('.rec-arrow.next');
+  let isPaused = false;
+  let currentIndex = 0;
+  const items = Array.from(track.children);
+  const isReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function renderCarousel() {
+    items.forEach((item, i) => {
+      item.classList.remove('center', 'prev', 'next', 'hidden-left', 'hidden-right');
+      const diff = (i - currentIndex + total) % total;
+
+      if (diff === 0) {
+        item.classList.add('center');
+      } else if (diff === 1 || (diff === total - 1 && total === 2 && i > currentIndex)) {
+        item.classList.add('next');
+      } else if (diff === total - 1) {
+        item.classList.add('prev');
+      } else {
+        // Decide whether to hide left or right to make rotation direction smooth
+        if (diff > total / 2) {
+          item.classList.add('hidden-left');
+        } else {
+          item.classList.add('hidden-right');
+        }
+      }
+    });
+  }
+
+  function next() {
+    currentIndex = (currentIndex + 1) % total;
+    renderCarousel();
+  }
+
+  function prevSlide() {
+    currentIndex = (currentIndex - 1 + total) % total;
+    renderCarousel();
+  }
+
+  function resetTimer() {
+    clearInterval(carouselInterval);
+    if (!isReduced) {
+      carouselInterval = setInterval(() => {
+        if (!document.getElementById('rec-track')) { clearInterval(carouselInterval); return; }
+        if (!isPaused && document.visibilityState === 'visible') {
+          next();
+        }
+      }, 5000);
+    }
+  }
+
+  renderCarousel();
+  prevBtn.addEventListener('click', () => { prevSlide(); resetTimer(); });
+  nextBtn.addEventListener('click', () => { next(); resetTimer(); });
+  track.addEventListener('pointerenter', () => { isPaused = true; });
+  track.addEventListener('pointerleave', () => { isPaused = false; });
+  track.addEventListener('focusin', () => { isPaused = true; });
+  track.addEventListener('focusout', () => { isPaused = false; });
+
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let isTouching = false;
+  let swiped = false;
+
+  track.addEventListener('touchstart', event => {
+    if (event.touches.length === 1) {
+      touchStartX = event.touches[0].clientX;
+      touchStartY = event.touches[0].clientY;
+      isTouching = true;
+      swiped = false;
+      isPaused = true;
+    }
+  }, { passive: true });
+
+  track.addEventListener('touchend', event => {
+    if (!isTouching || !event.changedTouches.length) {
+      isPaused = false;
+      resetTimer();
+      return;
+    }
+    isTouching = false;
+    isPaused = false;
+
+    const deltaX = event.changedTouches[0].clientX - touchStartX;
+    const deltaY = event.changedTouches[0].clientY - touchStartY;
+
+    if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY)) {
+      swiped = true;
+      if (deltaX < 0) {
+        next();
+      } else {
+        prevSlide();
+      }
+    }
+    resetTimer();
+  }, { passive: true });
+
+  track.addEventListener('touchcancel', () => {
+    isTouching = false;
+    isPaused = false;
+    resetTimer();
+  }, { passive: true });
+
+  track.addEventListener('click', event => {
+    if (swiped) {
+      event.preventDefault();
+      event.stopPropagation();
+      swiped = false;
+    }
+  }, true);
+
+  resetTimer();
 }
 
 function catalog() {
