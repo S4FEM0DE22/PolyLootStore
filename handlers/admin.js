@@ -134,7 +134,7 @@ export default { async fetch(request) {
         if (!/^[a-z0-9-]{3,80}$/.test(row?.id || '')) continue;
         const existing = await getAsset(row.id);
         if (!existing) continue;
-        await updateAssetDetails(row.id, { title: String(row.title || existing.title).slice(0,140), description: String(row.description || existing.description).slice(0,1000), price: Number(row.price) || existing.price, ...metadata({ ...row, source_url: row.source_url ?? existing.source_url }, existing.file_size_bytes || 0) });
+        await updateAssetDetails(row.id, { title: String(row.title || existing.title).slice(0,140), description: String(row.description || existing.description).slice(0,4000), price: Number(row.price) || existing.price, ...metadata({ ...row, source_url: row.source_url ?? existing.source_url }, existing.file_size_bytes || 0) });
         count++;
       }
       return json({ updated: count });
@@ -154,7 +154,7 @@ export default { async fetch(request) {
       const author = typeof input.author === 'string' ? input.author.trim() : '';
       const price = Number(input.price);
 
-      if (title.length < 3 || title.length > 140 || subtitle.length < 3 || subtitle.length > 180 || description.length < 10 || description.length > 1000 || author.length < 2 || author.length > 100 || !Number.isInteger(price) || price < 1 || price > 100000) {
+      if (title.length < 3 || title.length > 140 || subtitle.length < 3 || subtitle.length > 180 || description.length < 10 || description.length > 4000 || author.length < 2 || author.length > 100 || !Number.isInteger(price) || price < 1 || price > 100000) {
         return json({ error: 'กรุณากรอกข้อมูลแอสเซ็ตและราคาให้ถูกต้อง' }, 400);
       }
 
@@ -226,7 +226,7 @@ export default { async fetch(request) {
       const author = typeof input.author === 'string' ? input.author.trim() : '';
       const price = Number(input.price);
 
-      if (title.length < 3 || title.length > 140 || subtitle.length < 3 || subtitle.length > 180 || description.length < 10 || description.length > 1000 || author.length < 2 || author.length > 100 || !Number.isInteger(price) || price < 1 || price > 100000) {
+      if (title.length < 3 || title.length > 140 || subtitle.length < 3 || subtitle.length > 180 || description.length < 10 || description.length > 4000 || author.length < 2 || author.length > 100 || !Number.isInteger(price) || price < 1 || price > 100000) {
         return json({ error: 'กรุณาตรวจข้อมูลแอสเซ็ตและราคา' }, 400);
       }
 

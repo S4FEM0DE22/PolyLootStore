@@ -261,3 +261,56 @@ test('google auth session, changing username, and avatar updates work seamlessly
   assert.equal(currentSession.user.username, newUsername);
   assert.equal(currentSession.user.avatarUrl, avatarData.avatarUrl);
 });
+
+test('admin can create asset with rich long description and client zip inspector parses archive metadata', async () => {
+  const { inspectZipFile } = await import('../public/legacy/zip-inspect.js');
+  const fs = await import('node:fs');
+  const buf = fs.readFileSync('fixtures/blaster-kit.zip');
+  const testFile = new File([buf], 'blaster-kit.zip');
+
+  // Test ZIP inspector
+  const inspection = await inspectZipFile(testFile);
+  assert.equal(inspection.isZip, true);
+  assert.ok(inspection.modelCount > 0);
+  assert.ok(inspection.totalFiles > 0);
+  assert.ok(inspection.formatsDetected.includes('OBJ') || inspection.formatsDetected.includes('FBX') || inspection.formatsDetected.includes('GLB'));
+  assert.equal(inspection.suggestedTitle, 'Blaster Kit');
+
+  // Test creating asset with rich long description (> 1000 characters)
+  process.env.ADMIN_PASSWORD = 'TemporaryAdminPassword123456!';
+  const login = await adminApi.fetch(post('/api/admin', { action: 'login', password: process.env.ADMIN_PASSWORD }));
+  const cookie = login.headers.get('set-cookie').split(';')[0];
+
+  const longDesc = 'A'.repeat(1800) + '\n\nFeatures:\n- Modular\n- Low Poly\n- Rigged';
+  const data = new FormData();
+  data.set('action', 'add-asset');
+  data.set('title', 'Rich Description Asset');
+  data.set('subtitle', 'Weapons · Modular · Sci-Fi');
+  data.set('description', longDesc);
+  data.set('author', 'Kenney');
+  data.set('price', '150');
+  data.set('category', 'Weapons');
+  data.set('formats', 'OBJ, FBX, GLB');
+  data.set('engines', 'Unity, Unreal, Godot');
+  data.set('version', '1.0.0');
+  data.set('license', 'CC0 1.0');
+  data.set('cover_mode', 'default');
+  data.set('file', new Blob(['o Blaster\nv 0 0 0\n'], { type: 'text/plain' }), 'blaster.obj');
+
+  const created = await adminApi.fetch(new Request(base + '/api/admin', { method: 'POST', headers: { Cookie: cookie, Origin: base }, body: data }));
+  assert.equal(created.status, 200, JSON.stringify(await created.clone().json()));
+  const id = (await created.json()).asset.id;
+
+  try {
+    const storefront = await assetsApi.fetch(new Request(base + '/api/assets'));
+    const item = (await storefront.json()).assets.find(a => a.id === id);
+    assert.ok(item);
+    assert.equal(item.description.replace(/\r\n/g, '\n'), longDesc.replace(/\r\n/g, '\n'));
+    assert.equal(item.category, 'Weapons');
+    assert.deepEqual(item.formats, ['OBJ', 'FBX', 'GLB']);
+  } finally {
+    const removed = await adminApi.fetch(post('/api/admin', { action: 'delete-asset', id }, cookie));
+    assert.equal(removed.status, 200);
+  }
+});
+
