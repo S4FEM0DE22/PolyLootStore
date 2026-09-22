@@ -407,30 +407,148 @@ function catalog() {
   update();
 }
 
+function getProductPreviews(item, info) {
+  if (!item) return [];
+  if (Array.isArray(item.preview_images) && item.preview_images.length > 0) {
+    return item.preview_images.slice(0, 10).map((src, i) => ({
+      src,
+      label: `โมเดลตัวอย่าง ${i + 1}`
+    }));
+  }
+  const details = info || productDetails[item.id];
+  if (details?.slides) {
+    const list = [];
+    details.slides.forEach(slide => {
+      if (slide.kind === 'sheet' && Array.isArray(slide.items)) {
+        slide.items.forEach(it => {
+          if (it.src && !list.some(x => x.src === it.src)) {
+            list.push({ src: it.src, label: it.label || `โมเดลตัวอย่าง ${list.length + 1}` });
+          }
+        });
+      } else if (slide.kind === 'image' && slide.src && slide.src !== item.cover) {
+        if (!list.some(x => x.src === slide.src)) {
+          list.push({ src: slide.src, label: slide.label || `มุมมอง ${list.length + 1}` });
+        }
+      }
+    });
+    if (list.length > 0) return list.slice(0, 10);
+  }
+  if (productDetails[item.id]) {
+    const list = [];
+    for (let i = 1; i <= 10; i++) {
+      list.push({
+        src: `/assets/gallery/${item.id}/preview-${i}.png`,
+        label: `โมเดลตัวอย่าง ${i}`
+      });
+    }
+    return list;
+  }
+  return [{ src: item.cover, label: `ภาพรวม ${item.title}` }];
+}
+
 function detail(id) {
   const item = asset(id); if (!item) return notFound();
   const info = productDetails[id];
   const hasSample = Boolean(info) || ['animated-characters-protagonists', 'animated-characters-retro'].includes(id);
-  const slides = [{ kind: 'image', src: item.cover, label: `ภาพรวม ${item.title}` }, ...(info?.slides || [])];
+  const sampleItems = getProductPreviews(item, info);
+  const slides = [{ kind: 'image', src: item.cover, label: `ภาพรวม ${item.title}` }];
+  sampleItems.forEach((sample, idx) => {
+    if (sample.src !== item.cover && !slides.some(s => s.src === sample.src)) {
+      slides.push({
+        kind: 'image',
+        src: sample.src,
+        label: sample.label || `ตัวอย่างที่ ${idx + 1}`
+      });
+    }
+  });
+  if (info?.slides) {
+    info.slides.forEach(s => {
+      if (s.kind === 'sheet') slides.push(s);
+    });
+  }
+
   const mainSlide = slide => slide.kind === 'sheet'
     ? `<div class="gallery-sample-grid">${slide.items.map(part => `<figure><img src="${esc(part.src)}" alt="ตัวอย่างโมเดล ${esc(part.label)}" loading="lazy"><figcaption>${esc(part.label)}</figcaption></figure>`).join('')}</div>`
     : `<img class="gallery-large-image" src="${esc(slide.src)}" alt="${esc(slide.label)}" loading="${slide === slides[0] ? 'eager' : 'lazy'}">`;
-  const gallery = `<div class="product-gallery"><div class="gallery-stage" aria-live="polite">${slides.map((slide, index) => `<div class="gallery-slide${index === 0 ? ' is-active' : ''}" data-gallery-slide="${index}" ${index ? 'hidden' : ''}>${mainSlide(slide)}<span class="gallery-caption">${esc(slide.label)}</span></div>`).join('')}</div><div class="gallery-thumbs" role="group" aria-label="เลือกภาพตัวอย่างสินค้า">${slides.map((slide, index) => `<button type="button" class="gallery-thumb${index === 0 ? ' is-active' : ''}" data-gallery-thumb="${index}" aria-label="ภาพ ${index + 1}: ${esc(slide.label)}" aria-pressed="${index === 0}">${slide.kind === 'sheet' ? `<img src="${esc(slide.items[0].src)}" alt="" loading="lazy"><span>+${slide.items.length}</span>` : `<img src="${esc(slide.src)}" alt="" loading="lazy">`}</button>`).join('')}</div><p class="gallery-credit">ภาพตัวอย่างจากไฟล์ต้นฉบับในแพ็ก Kenney · ภาพโมเดลแยกอาจมีขนาดเล็ก</p></div>`;
+  const gallery = `<div class="product-gallery" id="product-main-gallery"><div class="gallery-stage" aria-live="polite">${slides.map((slide, index) => `<div class="gallery-slide${index === 0 ? ' is-active' : ''}" data-gallery-slide="${index}" ${index ? 'hidden' : ''}>${mainSlide(slide)}<span class="gallery-caption">${esc(slide.label)}</span></div>`).join('')}</div><div class="gallery-thumbs" role="group" aria-label="เลือกภาพตัวอย่างสินค้า">${slides.map((slide, index) => `<button type="button" class="gallery-thumb${index === 0 ? ' is-active' : ''}" data-gallery-thumb="${index}" aria-label="ภาพ ${index + 1}: ${esc(slide.label)}" aria-pressed="${index === 0}">${slide.kind === 'sheet' ? `<img src="${esc(slide.items[0]?.src || item.cover)}" alt="" loading="lazy"><span>+${slide.items.length}</span>` : `<img src="${esc(slide.src)}" alt="" loading="lazy">`}</button>`).join('')}</div><p class="gallery-credit">ภาพตัวอย่างโมเดล 3D จากไฟล์ต้นฉบับในแพ็ก · ตรวจสอบคุณภาพก่อนสั่งซื้อ</p></div>`;
   const bytes = Number(item.file_size_bytes) || 0;
   const size = bytes ? `${(bytes / 1048576).toFixed(1)} MB` : (item.file_size || 'ดูรายละเอียดในไฟล์');
+  const showcaseSection = sampleItems.length > 0 ? `
+    <section class="product-showcase-section">
+      <div class="product-showcase-head">
+        <div>
+          <h2>ภาพตัวอย่างโมเดลในแพ็ก</h2>
+          <p class="product-showcase-desc">รวมภาพตัวอย่างโมเดล 3D ที่อยู่ในชุดนี้ ตรวจสอบความละเอียด รูปทรง และสไตล์ก่อนสั่งซื้อ</p>
+        </div>
+        <span class="product-showcase-count">${sampleItems.length} ตัวอย่าง</span>
+      </div>
+      <div class="showcase-grid">
+        ${sampleItems.map((sample, idx) => {
+          const slideTargetIndex = slides.findIndex(s => s.src === sample.src);
+          const targetIdx = slideTargetIndex >= 0 ? slideTargetIndex : 0;
+          return `
+            <article class="showcase-card" data-showcase-idx="${targetIdx}" role="button" tabindex="0" aria-label="ดูภาพตัวอย่าง: ${esc(sample.label)}">
+              <span class="showcase-card-badge">#${idx + 1}</span>
+              <div class="showcase-img-wrap">
+                <img src="${esc(sample.src)}" alt="${esc(sample.label)}" loading="lazy">
+              </div>
+              <strong class="showcase-card-name">${esc(sample.label)}</strong>
+              <span class="showcase-card-hint">คลิกเพื่อดูภาพใหญ่</span>
+            </article>
+          `;
+        }).join('')}
+      </div>
+    </section>
+  ` : '';
   const features = info ? `<div class="product-inside"><div><span class="kicker">INSIDE THE PACK</span><h3>ในชุดนี้มีอะไร</h3><p><strong>${info.count} ${esc(info.noun)}</strong> จากไฟล์ต้นฉบับที่ตรวจสอบแล้ว</p></div><ul>${info.highlights.map(point => `<li>${esc(point)}</li>`).join('')}</ul></div>` : '';
   const related = assets.filter(other => other.id !== id).sort((a, b) => Number(b.category === item.category) - Number(a.category === item.category)).slice(0, 4);
   setView(`<button class="back-link" type="button" data-back-fallback="#catalog">← กลับไปดูสินค้าทั้งหมด</button>
     <div class="product-breadcrumb">สินค้า <span>/</span> ${esc(item.category || '3D Assets')} <span>/</span> <strong>${esc(item.title)}</strong></div>
     <section class="white-panel detail-panel detail-store"><div>${gallery}</div><div class="detail-copy"><div class="detail-kicker"><span class="kicker">${esc(item.category || '3D Asset')}</span><span class="detail-license">${esc(item.license || 'ตรวจสอบสิทธิ์')}</span></div><h1>${esc(item.title)}</h1><p class="detail-subtitle">${esc(item.subtitle)}</p><p class="detail-lead">${esc(item.description)}</p>${info ? `<div class="detail-count"><strong>${info.count}</strong><span>${esc(info.noun)}ในแพ็ก</span></div>` : ''}<div class="detail-meta"><span>ผู้จัดทำ <strong>${esc(item.author)}</strong></span><span>รูปแบบไฟล์ <strong>${esc((item.formats || []).join(' · ') || 'ดูรายละเอียด')}</strong></span><span>เอนจินที่ระบุ <strong>${esc((item.engines || []).join(' · ') || 'ตรวจสอบก่อนใช้')}</strong></span><span>เวอร์ชัน <strong>${esc(item.version || '—')}</strong></span><span>ขนาด ZIP <strong>${esc(size)}</strong></span><span>สิทธิ์ใช้งาน <strong>${esc(item.license || 'ดูต้นฉบับ')}</strong></span></div><div class="product-buy-box"><div><small>ราคาจำลองสำหรับ Mini Project</small><strong class="detail-price">${money(item.price)}</strong></div><div class="detail-actions"><button class="pill-button dark" type="button" data-add="${esc(item.id)}">เพิ่มลงตะกร้า</button><a class="pill-button outline" href="#checkout/${esc(item.id)}">สั่งซื้อชุดนี้</a>${hasSample ? `<a class="pill-button light" href="/assets/samples/${esc(item.id)}.zip" download>ดาวน์โหลดโมเดลตัวอย่างฟรี</a>` : ''}</div><p>ชำระเงินแบบจำลอง · ไม่มีการรับเงินจริง · ตัวอย่างฟรีมีเพียง 1 โมเดลจากแพ็ก</p></div><p class="source-note">ไฟล์ต้นฉบับจาก <a href="${esc(item.source_url || `https://kenney.nl/assets/${item.id}`)}" target="_blank" rel="noopener noreferrer">Kenney ↗</a> · ตรวจสอบเงื่อนไขสิทธิ์ก่อนใช้งาน</p></div></section>
+    ${showcaseSection}
     ${features}
     <section class="product-information"><div class="section-title"><h2>ข้อมูลก่อนนำไปใช้</h2><span>PRODUCT DETAILS</span></div><div class="product-info-grid"><article><span class="product-info-number">01</span><h3>ไฟล์ที่ได้รับ</h3><p>แพ็ก ZIP ประกอบด้วยโมเดล 3D ในรูปแบบที่ระบุด้านบน พร้อมไฟล์ประกอบตามชุดต้นฉบับ ดูภาพตัวอย่างเพื่อเลือกชิ้นที่เหมาะกับเกมของคุณ</p></article><article><span class="product-info-number">02</span><h3>ใช้งานกับโปรเจกต์</h3><p>นำเข้าไฟล์ด้วยรูปแบบที่เอนจินรองรับ แล้วตรวจวัสดุและขนาดโมเดลในโปรเจกต์ของคุณ ความเข้ากันได้ขึ้นอยู่กับเวอร์ชันและการตั้งค่าของแต่ละเอนจิน</p></article><article><span class="product-info-number">03</span><h3>รับไฟล์และสิทธิ์</h3><p>หลังจำลองชำระเงินสำเร็จ ดาวน์โหลดจากคลังของบัญชีได้ หากลิงก์หมดอายุสามารถเปิดคำสั่งซื้อเพื่อรับลิงก์ใหม่ สินค้าเริ่มต้นจาก Kenney ใช้สิทธิ์ CC0 1.0</p></article></div></section>
     ${related.length ? `<section class="product-related"><div class="section-title"><h2>เลือกดูชุดอื่นด้วย</h2><a class="section-link" href="#catalog">ดูสินค้าทั้งหมด →</a></div><div class="product-grid">${related.map(productCard).join('')}</div></section>` : ''}`, 'catalog');
-  document.querySelectorAll('[data-gallery-thumb]').forEach(button => button.addEventListener('click', () => {
-    const index = Number(button.dataset.galleryThumb);
-    document.querySelectorAll('[data-gallery-slide]').forEach(slide => { const active = Number(slide.dataset.gallerySlide) === index; slide.hidden = !active; slide.classList.toggle('is-active', active); });
-    document.querySelectorAll('[data-gallery-thumb]').forEach(thumb => { const active = thumb === button; thumb.classList.toggle('is-active', active); thumb.setAttribute('aria-pressed', String(active)); });
-  }));
+  const activateSlide = index => {
+    document.querySelectorAll('[data-gallery-slide]').forEach(slide => {
+      const active = Number(slide.dataset.gallerySlide) === index;
+      slide.hidden = !active;
+      slide.classList.toggle('is-active', active);
+    });
+    document.querySelectorAll('[data-gallery-thumb]').forEach(thumb => {
+      const active = Number(thumb.dataset.galleryThumb) === index;
+      thumb.classList.toggle('is-active', active);
+      thumb.setAttribute('aria-pressed', String(active));
+      if (active) {
+        thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    });
+    document.querySelectorAll('.showcase-card').forEach(card => {
+      const isCardActive = Number(card.dataset.showcaseIdx) === index;
+      card.classList.toggle('is-selected', isCardActive);
+    });
+  };
+
+  document.querySelectorAll('[data-gallery-thumb]').forEach(button => {
+    button.addEventListener('click', () => {
+      activateSlide(Number(button.dataset.galleryThumb));
+    });
+  });
+
+  document.querySelectorAll('.showcase-card').forEach(card => {
+    const handleCardClick = () => {
+      const idx = Number(card.dataset.showcaseIdx);
+      activateSlide(idx);
+      document.querySelector('#product-main-gallery')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    card.addEventListener('click', handleCardClick);
+    card.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        handleCardClick();
+      }
+    });
+  });
 }
 
 function authPage(mode = 'login', message = '') {
@@ -781,9 +899,15 @@ function profile(feedback = null) {
           <a class="dashboard-link" href="#forgot-password">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> เปลี่ยนรหัสผ่าน
           </a>
-          <a class="dashboard-link" href="#settings">⚙ ${t('ตั้งค่าบัญชี', 'Settings')}</a>
-          <a class="dashboard-link" href="#notifications">♧ ${t('การแจ้งเตือน', 'Notifications')}</a>
-          <a class="dashboard-link" href="#help">? ${t('ศูนย์ช่วยเหลือ', 'Help center')}</a>
+          <a class="dashboard-link" href="#settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> ${t('ตั้งค่าบัญชี', 'Settings')}
+          </a>
+          <a class="dashboard-link" href="#notifications">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg> ${t('การแจ้งเตือน', 'Notifications')}
+          </a>
+          <a class="dashboard-link" href="#help">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> ${t('ศูนย์ช่วยเหลือ', 'Help center')}
+          </a>
           <button class="dashboard-link danger" id="customer-logout" type="button">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg> ออกจากระบบ
           </button>

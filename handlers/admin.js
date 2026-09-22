@@ -1,4 +1,6 @@
 import path from 'node:path';
+import fs from 'node:fs';
+import zlib from 'node:zlib';
 import { randomBytes } from 'node:crypto';
 import { adminConfigured, clearSessionCookie, correctPassword, isAdmin, sessionCookie } from '../lib/admin-auth.js';
 import { listCustomerProfiles } from '../lib/customer-auth.js';
@@ -8,6 +10,69 @@ import { DEFAULT_COVER, inferCoverMode, validateCustomCoverFile } from '../lib/p
 import { createAsset, deleteAsset, deleteCoverFile, deleteAssetFile, getAsset, getOrder, listAllAssets, listOrders, listSupportTickets, setAssetActive, updateAssetDetails, updateTicketStatus, uploadCoverFile, uploadAssetFile } from '../lib/store.js';
 import payApi from './pay.js';
 import cancelApi from './cancel.js';
+
+function extractPreviewsFromZipBuffer(buffer, slug) {
+  try {
+    let eocd = -1;
+    for (let i = buffer.length - 22; i >= Math.max(0, buffer.length - 65557); i--) {
+      if (buffer.readUInt32LE(i) === 0x06054b50) { eocd = i; break; }
+    }
+    if (eocd === -1) return [];
+    const cdOffset = buffer.readUInt32LE(eocd + 16);
+    const totalEntries = buffer.readUInt16LE(eocd + 10);
+    let offset = cdOffset;
+    const imgEntries = [];
+    for (let i = 0; i < totalEntries && offset + 46 <= buffer.length; i++) {
+      if (buffer.readUInt32LE(offset) !== 0x02014b50) break;
+      const fnLen = buffer.readUInt16LE(offset + 28);
+      const extraLen = buffer.readUInt16LE(offset + 30);
+      const commentLen = buffer.readUInt16LE(offset + 32);
+      const compSize = buffer.readUInt32LE(offset + 20);
+      const uncompSize = buffer.readUInt32LE(offset + 24);
+      const localOffset = buffer.readUInt32LE(offset + 42);
+      const method = buffer.readUInt16LE(offset + 10);
+      const filename = buffer.toString('utf8', offset + 46, offset + 46 + fnLen);
+      const lower = filename.toLowerCase();
+      if ((lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.webp')) && !lower.includes('colormap') && !lower.includes('__macosx')) {
+        imgEntries.push({ filename, compSize, uncompSize, localOffset, method });
+      }
+      offset += 46 + fnLen + extraLen + commentLen;
+    }
+
+    if (!imgEntries.length) return [];
+    imgEntries.sort((a, b) => {
+      const aFn = a.filename.toLowerCase();
+      const bFn = b.filename.toLowerCase();
+      const score = fn => (fn.includes('previews/') ? 20 : 0) + (fn.includes('preview') ? 15 : 0) + (fn.includes('sample') ? 10 : 0);
+      return score(bFn) - score(aFn);
+    });
+
+    const targetDir = path.join(process.cwd(), 'public', 'assets', 'gallery', slug);
+    if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+
+    const selected = imgEntries.slice(0, 10);
+    const saved = [];
+    selected.forEach((entry, idx) => {
+      try {
+        const fnLen = buffer.readUInt16LE(entry.localOffset + 26);
+        const extraLen = buffer.readUInt16LE(entry.localOffset + 28);
+        const dataStart = entry.localOffset + 30 + fnLen + extraLen;
+        const slice = buffer.subarray(dataStart, dataStart + entry.compSize);
+        let decomp = null;
+        if (entry.method === 0) decomp = slice;
+        else if (entry.method === 8) decomp = zlib.inflateRawSync(slice);
+        if (decomp && decomp.length > 0) {
+          const outName = `preview-${idx + 1}.png`;
+          fs.writeFileSync(path.join(targetDir, outName), decomp);
+          saved.push(`/assets/gallery/${slug}/${outName}`);
+        }
+      } catch {}
+    });
+    return saved;
+  } catch {
+    return [];
+  }
+}
 
 const defaultAssetFiles = new Set(['blocky-characters.zip','modular-dungeon-kit.zip','blaster-kit.zip','car-kit.zip','furniture-kit.zip']);
 const defaultCovers = new Set([DEFAULT_COVER]);
@@ -167,6 +232,10 @@ export default { async fetch(request) {
       const buffer = Buffer.from(await input.file.arrayBuffer());
       await uploadAssetFile({ filename: safeFileName, buffer, mimeType: input.file.type });
 
+      if (ext === '.zip') {
+        extractPreviewsFromZipBuffer(buffer, slug);
+      }
+
       let cover = DEFAULT_COVER;
       const coverMode = typeof input.cover_mode === 'string' && input.cover_mode.trim() ? input.cover_mode.trim() : 'default';
       let notice = null;
@@ -242,6 +311,9 @@ export default { async fetch(request) {
         await uploadAssetFile({ filename: newFileName, buffer: newFileBuffer, mimeType: input.file.type });
         changes.file = newFileName;
         changes.file_size_bytes = newFileBuffer.length;
+        if (newFileExt === '.zip') {
+          extractPreviewsFromZipBuffer(newFileBuffer, input.id);
+        }
       }
 
       const coverMode = typeof input.cover_mode === 'string' && input.cover_mode.trim() ? input.cover_mode.trim() : null;

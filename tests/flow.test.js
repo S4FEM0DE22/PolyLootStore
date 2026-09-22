@@ -314,3 +314,24 @@ test('admin can create asset with rich long description and client zip inspector
   }
 });
 
+test('product gallery details provide 10 model preview images per pack', async () => {
+  const { productDetails } = await import('../public/legacy/product-gallery.js');
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+
+  // Verify built-in kits have 10 items in their preview slides
+  assert.ok(productDetails['pirate-kit']);
+  const pirateItems = productDetails['pirate-kit'].slides[0].items;
+  assert.equal(pirateItems.length, 10);
+  assert.equal(pirateItems[0].src, '/assets/gallery/pirate-kit/preview-1.png');
+  assert.equal(pirateItems[9].src, '/assets/gallery/pirate-kit/preview-10.png');
+
+  // Verify physical files exist on disk for sample kits
+  for (const kitId of ['pirate-kit', 'castle-kit', 'watercraft-kit', 'nature-kit']) {
+    for (let i = 1; i <= 10; i++) {
+      const filePath = path.join(process.cwd(), 'public', 'assets', 'gallery', kitId, `preview-${i}.png`);
+      assert.ok(fs.existsSync(filePath), `Missing preview file: ${filePath}`);
+    }
+  }
+});
+
