@@ -833,3 +833,137 @@ select.styled-select:hover,.settings-card select.field:hover{border-color:var(--
   .site-header .nav-pills .settings-menu-toggle[aria-expanded='true']{background:var(--lime);border-color:var(--lime-line)}
   .site-header .nav-pills>a:focus-visible,.site-header .nav-pills button:focus-visible{outline:3px solid var(--forest);outline-offset:2px}
 }
+
+/* 3D Asset Store Theme Accents */
+.home-hero {
+  position: relative;
+  background-image: radial-gradient(circle, rgba(45, 80, 60, 0.08) 1.5px, transparent 1.5px), linear-gradient(120deg, #edf5e8, #dceecb);
+  background-size: 24px 24px, 100% 100%;
+}
+.dev-stats-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 24px 0 0;
+  padding-top: 20px;
+  border-top: 1px solid rgba(45, 80, 60, 0.16);
+}
+.dev-stat-box {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.dev-stat-box .stat-value {
+  font-family: var(--heading-font);
+  font-size: clamp(1rem, 1.4vw, 1.25rem);
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+.dev-stat-box .stat-caption {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+@media (max-width: 800px) {
+  .dev-stats-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+}
+
+.product-card {
+  position: relative;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.product-card:hover {
+  transform: translateY(-5px);
+  border-color: #a8cf9a;
+  box-shadow: 0 16px 36px rgba(45, 80, 60, 0.14);
+}
+.product-cover {
+  position: relative;
+  overflow: hidden;
+}
+.card-type-tag {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(33, 53, 42, 0.85);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  border-radius: 6px;
+  pointer-events: none;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+.card-meta-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+.card-engine-tag {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #4a6b52;
+  background: #e6f0e0;
+  border-radius: 4px;
+  padding: 2px 6px;
+  white-space: nowrap;
+}
+.spec-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 3px 7px;
+  border-radius: 6px;
+}
+.spec-badge.format-badge {
+  background: #edf4e9;
+  color: #2e4a36;
+  border: 1px solid #d8e5d2;
+  letter-spacing: 0.04em;
+}
+.spec-badge.license-badge {
+  background: #f7faf5;
+  color: #556c5c;
+  border: 1px dashed #cad9c5;
+}
+
+.quick-category-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0 22px;
+}
+.quick-cat-btn {
+  background: #fff;
+  border: 1px solid var(--border);
+  color: var(--ink);
+  font-size: 0.84rem;
+  font-weight: 600;
+  padding: 6px 15px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.quick-cat-btn:hover {
+  background: var(--surface);
+  border-color: var(--lime-line);
+  transform: translateY(-1px);
+}
+.quick-cat-btn.active {
+  background: var(--forest);
+  border-color: var(--forest);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(45, 80, 60, 0.22);
+}
+
