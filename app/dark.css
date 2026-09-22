@@ -1,0 +1,41 @@
+html[data-theme='dark'] {
+  color-scheme: dark;
+  --lime: #42654b;
+  --lime-line: #496651;
+  --ink: #edf4ec;
+  --muted: #a9bbae;
+  --surface: #1b2923;
+  --border: #365044;
+  --forest: #a5d1aa;
+  --forest-hover: #c0e2c3;
+  --danger: #ee9999;
+  background: #101a15;
+}
+html[data-theme='dark'] body,
+html[data-theme='dark'] .app-shell,
+html[data-theme='dark'] .admin-workspace { background: #101a15 !important; color: var(--ink); }
+html[data-theme='dark'] :is(.site-header,.site-footer,.white-panel,.detail-panel,.cart-panel,.tracking-panel,.checkout-panel,.status-panel,.mock-payment-panel,.dashboard-panel,.help-panel,.support-panel,.settings-panel,.notifications-panel,.admin-main,.admin-sidebar,.panel,.metric,.asset,.admin-order-row,.customer-row,.admin-dialog,.login-card,.admin-auth-main,.ticket-row,.support-row,.library-card,.product-card,.product-info-grid article,.gallery-sample-grid figure,.product-inside li,.report-grid article,.cover-option-card,.current-cover-card,.cover-preview-wrapper) {
+  background: #1b2923 !important; color: var(--ink) !important; border-color: var(--border) !important;
+}
+html[data-theme='dark'] :is(.site-header,.site-footer,.admin-sidebar,.admin-auth-side,.home-hero,.catalog-hero) { background: #243d2d !important; border-color: var(--border) !important; }
+html[data-theme='dark'] :is(.nav-pills,.nav-pills a,.nav-pills button,.order-tabs,.order-tabs a,.tracking-lookup-trigger,.gallery-slide,.gallery-stage,.gallery-thumb,.product-cover,.detail-cover,.detail-count,.detail-meta,.product-buy-box,.demo-note,.cart-total-box,.library-shell,.library-cover,.current-file-box,.admin-cover,.mock-readonly,.tracking-row,.cart-row) { background: #24362b !important; color: var(--ink) !important; border-color: var(--border) !important; }
+html[data-theme='dark'] :is(.nav-pills a.active,.order-tabs a.active,.nav-pills a:hover,.order-tabs a:hover) { background: #355640 !important; }
+html[data-theme='dark'] :is(input,textarea,select,.field,.mini,.pill-button.outline,.pill-button.light,.small-action) { background: #14221a !important; color: var(--ink) !important; border-color: var(--border) !important; }
+html[data-theme='dark'] :is(.pill-button.dark,.primary,.login-card .primary,.product-bottom .pill-button) { background: #a5d1aa !important; color: #102017 !important; border-color: #a5d1aa !important; }
+html[data-theme='dark'] :is(h1,h2,h3,h4,strong,.detail-price,.metric strong,.product-copy h3,.admin-order-copy strong,.detail-store .detail-copy h1) { color: var(--ink); }
+html[data-theme='dark'] :is(p,small,.muted,.detail-copy>p,.help-grid p,.report-grid article span,.product-info-grid p,.tracking-note,.source-note,.receipt-disclaimer) { color: var(--muted); }
+html[data-theme='dark'] :is(.notice,.demo-badge,.product-specs span,.detail-license,.status-pill,.pill) { border-color: var(--border) !important; }
+html[data-theme='dark'] .settings-hero { background: linear-gradient(120deg,#26432f,#1b2923) !important; }
+html[data-theme='dark'] .settings-card { background: #24362b !important; border-color: var(--border) !important; }
+html[data-theme='dark'] .settings-card p { color: var(--muted) !important; }
+html[data-theme='dark'] :is(label,.profile-form label,.auth-card label,.settings-card label) { color: var(--ink) !important; }
+html[data-theme='dark'] .settings-dropdown { background: #1b2923 !important; color: var(--ink) !important; border-color: var(--border) !important; }
+html[data-theme='dark'] .settings-dropdown :is(.settings-dropdown-section label,.settings-dropdown-head small) { color: var(--muted) !important; }
+html[data-theme='dark'] .settings-dropdown-links a { color: var(--ink) !important; }
+html[data-theme='dark'] .settings-dropdown-links a:hover { background: #355640 !important; }
+html[data-theme='dark'] :is(select.styled-select,.settings-card select.field) { background-color: #14221a !important; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a5d1aa' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important; background-repeat:no-repeat !important; background-position:right 13px center !important; background-size:16px 16px !important; }
+html[data-theme='dark'] .settings-dropdown-links .settings-shortcut { background:#24362b !important; border-color:var(--border) !important; }
+html[data-theme='dark'] .settings-dropdown-links .settings-shortcut:hover { background:#355640 !important; border-color:#6d9475 !important; }
+html[data-theme='dark'] .settings-shortcut-copy small { color:var(--muted) !important; }
+html[data-theme='dark'] .settings-shortcut-icon { background:#355640 !important; color:#c0e2c3 !important; }
+@media print { html[data-theme='dark'] body, html[data-theme='dark'] .status-panel { background: white !important; color: black !important; } }

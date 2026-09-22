@@ -1,0 +1,12 @@
+node_modules/
+.data/
+.env
+.env.local
+.env.*.local
+.vercel/
+private-assets/
+*.log
+.next/
+out/
+*.tsbuildinfo
+.npm-cache/

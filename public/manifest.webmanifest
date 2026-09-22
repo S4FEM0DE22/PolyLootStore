@@ -1,0 +1,17 @@
+{
+  "name": "PolyLoot",
+  "short_name": "PolyLoot",
+  "start_url": "/#home",
+  "display": "standalone",
+  "background_color": "#bbff75",
+  "theme_color": "#bbff75",
+  "icons": [
+    {
+      "src": "/assets/brand/polyloot.png",
+      "sizes": "1024x312",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
+

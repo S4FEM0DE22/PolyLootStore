@@ -1,0 +1,172 @@
+[
+  {
+    "id": "blaster-kit",
+    "model": "Models/GLB format/blaster-a.glb",
+    "bytes": 8102
+  },
+  {
+    "id": "blocky-characters",
+    "model": "Models/GLB format/character-a.glb",
+    "bytes": 15706
+  },
+  {
+    "id": "car-kit",
+    "model": "Models/GLB format/ambulance.glb",
+    "bytes": 46622
+  },
+  {
+    "id": "furniture-kit",
+    "model": "Models/GLTF format/bathroomCabinet.glb",
+    "bytes": 2273
+  },
+  {
+    "id": "modular-dungeon-kit",
+    "model": "Models/GLB format/corridor-corner.glb",
+    "bytes": 14889
+  },
+  {
+    "id": "3d-road-tiles",
+    "model": "Models/roadTile_001.obj",
+    "bytes": 1276
+  },
+  {
+    "id": "animated-characters-protagonists",
+    "model": "Model/characterMedium.fbx",
+    "bytes": 75920
+  },
+  {
+    "id": "animated-characters-retro",
+    "model": "Model/characterMedium.fbx",
+    "bytes": 75916
+  },
+  {
+    "id": "animated-characters-survivors",
+    "model": "Model/characterMedium.fbx",
+    "bytes": 75919
+  },
+  {
+    "id": "castle-kit",
+    "model": "Models/GLB format/bridge-draw.glb",
+    "bytes": 1760
+  },
+  {
+    "id": "city-kit-commercial",
+    "model": "Models/GLB format/building-a.glb",
+    "bytes": 16133
+  },
+  {
+    "id": "city-kit-industrial",
+    "model": "Models/GLB format/building-a.glb",
+    "bytes": 25431
+  },
+  {
+    "id": "city-kit-suburban",
+    "model": "Models/GLB format/building-type-a.glb",
+    "bytes": 16803
+  },
+  {
+    "id": "coaster-kit",
+    "model": "Models/GLB format/bench.glb",
+    "bytes": 2521
+  },
+  {
+    "id": "factory-kit",
+    "model": "Models/GLB format/arrow-basic-rounded.glb",
+    "bytes": 1802
+  },
+  {
+    "id": "fantasy-town-kit",
+    "model": "Models/GLB format/balcony-wall-fence.glb",
+    "bytes": 2439
+  },
+  {
+    "id": "graveyard-kit",
+    "model": "Models/GLB format/altar-stone.glb",
+    "bytes": 3482
+  },
+  {
+    "id": "hexagon-kit",
+    "model": "Models/GLB format/bridge.glb",
+    "bytes": 8057
+  },
+  {
+    "id": "holiday-kit",
+    "model": "Models/GLB format/bench-short.glb",
+    "bytes": 3692
+  },
+  {
+    "id": "mini-characters",
+    "model": "Models/GLB format/aid-cane-blind.glb",
+    "bytes": 2393
+  },
+  {
+    "id": "mini-dungeon",
+    "model": "Models/GLB format/banner.glb",
+    "bytes": 3730
+  },
+  {
+    "id": "minigolf-kit",
+    "model": "Models/GLB format/ball-blue.glb",
+    "bytes": 17351
+  },
+  {
+    "id": "modular-cave-kit",
+    "model": "Models/GLB format/corridor-corner.glb",
+    "bytes": 17705
+  },
+  {
+    "id": "modular-space-kit",
+    "model": "Models/GLB format/cables.glb",
+    "bytes": 11099
+  },
+  {
+    "id": "nature-kit",
+    "model": "Models/GLTF format/bed.glb",
+    "bytes": 5539
+  },
+  {
+    "id": "pirate-kit",
+    "model": "Models/GLB format/barrel.glb",
+    "bytes": 3563
+  },
+  {
+    "id": "platformer-kit",
+    "model": "Models/GLB format/arrow.glb",
+    "bytes": 2279
+  },
+  {
+    "id": "prototype-kit",
+    "model": "Models/GLB format/animal-bison.glb",
+    "bytes": 7386
+  },
+  {
+    "id": "retro-urban-kit",
+    "model": "Models/GLB format/balcony-ladder-bottom.glb",
+    "bytes": 1679
+  },
+  {
+    "id": "space-kit",
+    "model": "Models/GLTF format/alien.glb",
+    "bytes": 6276
+  },
+  {
+    "id": "tower-defense-kit",
+    "model": "Models/GLB format/detail-crystal-large.glb",
+    "bytes": 11503
+  },
+  {
+    "id": "toy-car-kit",
+    "model": "Models/GLB format/gate-finish.glb",
+    "bytes": 3121
+  },
+  {
+    "id": "train-kit",
+    "model": "Models/GLB format/railroad-corner-large-ramp.glb",
+    "bytes": 11863
+  },
+  {
+    "id": "watercraft-kit",
+    "model": "Models/GLB format/arrow-standing.glb",
+    "bytes": 1670
+  }
+]

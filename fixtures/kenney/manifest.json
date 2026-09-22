@@ -1,0 +1,347 @@
+[
+  {
+    "slug": "pirate-kit",
+    "source_url": "https://kenney.nl/assets/pirate-kit",
+    "formats": [
+      "FBX",
+      "GLB",
+      "OBJ"
+    ],
+    "model_files": 216,
+    "bytes": 3154665,
+    "model_count": 72
+  },
+  {
+    "slug": "watercraft-kit",
+    "source_url": "https://kenney.nl/assets/watercraft-kit",
+    "formats": [
+      "FBX",
+      "GLB",
+      "OBJ"
+    ],
+    "model_files": 138,
+    "bytes": 1870991,
+    "model_count": 46
+  },
+  {
+    "slug": "retro-urban-kit",
+    "source_url": "https://kenney.nl/assets/retro-urban-kit",
+    "formats": [
+      "FBX",
+      "GLB",
+      "OBJ"
+    ],
+    "model_files": 372,
+    "bytes": 2161463,
+    "model_count": 124
+  },
+  {
+    "slug": "castle-kit",
+    "source_url": "https://kenney.nl/assets/castle-kit",
+    "formats": [
+      "FBX",
+      "GLB",
+      "OBJ"
+    ],
+    "model_files": 228,
+    "bytes": 2232589,
+    "model_count": 76
+  },
+  {
+    "slug": "tower-defense-kit",
+    "source_url": "https://kenney.nl/assets/tower-defense-kit",
+    "formats": [
+      "FBX",
+      "GLB",
+      "OBJ"
+    ],
+    "model_files": 480,
+    "bytes": 5404433,
+    "model_count": 160
+  },
+  {
+    "slug": "nature-kit",
+    "source_url": "https://kenney.nl/assets/nature-kit",
+    "formats": [
+      "DAE",
+      "FBX",
+      "GLB",
+      "OBJ",
+      "STL"
+    ],
+    "model_files": 987,
+    "bytes": 10537521,
+    "model_count": 329
+  },
+  {
+    "slug": "space-kit",
+    "source_url": "https://kenney.nl/assets/space-kit",
+    "formats": [
+      "DAE",
+      "FBX",
+      "GLB",
+      "OBJ",
+      "STL"
+    ],
+    "model_files": 459,
+    "bytes": 6677531,
+    "model_count": 153
+  },
+  {
+    "slug": "toy-car-kit",
+    "source_url": "https://kenney.nl/assets/toy-car-kit",
+    "formats": [
+      "FBX",
+      "GLB",
+      "OBJ"
+    ],
+    "model_files": 471,
+    "bytes": 5245353,
+    "model_count": 157
+  },
+  {
+    "slug": "modular-space-kit",
+    "source_url": "https://kenney.nl/assets/modular-space-kit",
+    "formats": [
+      "FBX",
+      "GLB",
+      "OBJ"
+    ],
+    "model_files": 120,
+    "bytes": 6966606,
+    "model_count": 40
+  },
+  {
+    "slug": "factory-kit",
+    "source_url": "https://kenney.nl/assets/factory-kit",
+    "formats": [
+      "FBX",
+      "GLB",
+      "OBJ"
+    ],
+    "model_files": 429,
+    "bytes": 4511890,
+    "model_count": 143
+  },
+  {
+    "slug": "graveyard-kit",
+    "source_url": "https://kenney.nl/assets/graveyard-kit",
+    "formats": [
+      "FBX",
+      "GLB",
+      "OBJ"
+    ],
+    "model_files": 273,
+    "bytes": 3623408,
+    "model_count": 91
+  },
+  {
+    "slug": "fantasy-town-kit",
+    "source_url": "https://kenney.nl/assets/fantasy-town-kit",
+    "formats": [
+      "FBX",
+      "GLB",
+      "OBJ"
+    ],
+    "model_files": 501,
+    "bytes": 3854691,
+    "model_count": 167
+  },
+  {
+    "slug": "city-kit-commercial",
+    "source_url": "https://kenney.nl/assets/city-kit-commercial",
+    "formats": [
+      "FBX",
+      "GLB",
+      "OBJ"
+    ],
+    "model_files": 123,
+    "bytes": 4096974,
+    "model_count": 41
+  },
+  {
+    "slug": "city-kit-industrial",
+    "source_url": "https://kenney.nl/assets/city-kit-industrial",
+    "formats": [
+      "FBX",
+      "GLB",
+      "OBJ"
+    ],
+    "model_files": 111,
+    "bytes": 5045077,
+    "model_count": 37
+  },
+  {
+    "slug": "city-kit-suburban",
+    "source_url": "https://kenney.nl/assets/city-kit-suburban",
+    "formats": [
+      "FBX",
+      "GLB",
+      "OBJ"
+    ],
+    "model_files": 120,
+    "bytes": 3038740,
+    "model_count": 40
+  },
+  {
+    "slug": "mini-dungeon",
+    "source_url": "https://kenney.nl/assets/mini-dungeon",
+    "formats": [
+      "FBX",
+      "GLB",
+      "OBJ"
+    ],
+    "model_files": 90,
+    "bytes": 1796820,
+    "model_count": 30
+  },
+  {
+    "slug": "modular-cave-kit",
+    "source_url": "https://kenney.nl/assets/modular-cave-kit",
+    "formats": [
+      "FBX",
+      "GLB",
+      "OBJ"
+    ],
+    "model_files": 120,
+    "bytes": 7025078,
+    "model_count": 40
+  },
+  {
+    "slug": "animated-characters-retro",
+    "source_url": "https://kenney.nl/assets/animated-characters-retro",
+    "formats": [
+      "FBX"
+    ],
+    "model_files": 4,
+    "bytes": 706472,
+    "model_count": 4
+  },
+  {
+    "slug": "animated-characters-protagonists",
+    "source_url": "https://kenney.nl/assets/animated-characters-protagonists",
+    "formats": [
+      "FBX"
+    ],
+    "model_files": 4,
+    "bytes": 581441,
+    "model_count": 4
+  },
+  {
+    "slug": "animated-characters-survivors",
+    "source_url": "https://kenney.nl/assets/animated-characters-survivors",
+    "formats": [
+      "FBX"
+    ],
+    "model_files": 4,
+    "bytes": 718027,
+    "model_count": 4
+  },
+  {
+    "slug": "mini-characters",
+    "source_url": "https://kenney.nl/assets/mini-characters",
+    "formats": [
+      "FBX",
+      "GLB",
+      "OBJ"
+    ],
+    "model_files": 78,
+    "bytes": 2403059,
+    "model_count": 26
+  },
+  {
+    "slug": "train-kit",
+    "source_url": "https://kenney.nl/assets/train-kit",
+    "formats": [
+      "FBX",
+      "GLB",
+      "OBJ"
+    ],
+    "model_files": 309,
+    "bytes": 5266588,
+    "model_count": 103
+  },
+  {
+    "slug": "platformer-kit",
+    "source_url": "https://kenney.nl/assets/platformer-kit",
+    "formats": [
+      "FBX",
+      "GLB",
+      "OBJ"
+    ],
+    "model_files": 459,
+    "bytes": 4640135,
+    "model_count": 153
+  },
+  {
+    "slug": "hexagon-kit",
+    "source_url": "https://kenney.nl/assets/hexagon-kit",
+    "formats": [
+      "FBX",
+      "GLB",
+      "OBJ"
+    ],
+    "model_files": 216,
+    "bytes": 2448931,
+    "model_count": 72
+  },
+  {
+    "slug": "prototype-kit",
+    "source_url": "https://kenney.nl/assets/prototype-kit",
+    "formats": [
+      "FBX",
+      "GLB",
+      "OBJ"
+    ],
+    "model_files": 435,
+    "bytes": 2961396,
+    "model_count": 145
+  },
+  {
+    "slug": "minigolf-kit",
+    "source_url": "https://kenney.nl/assets/minigolf-kit",
+    "formats": [
+      "FBX",
+      "GLB",
+      "OBJ"
+    ],
+    "model_files": 378,
+    "bytes": 3163116,
+    "model_count": 126
+  },
+  {
+    "slug": "holiday-kit",
+    "source_url": "https://kenney.nl/assets/holiday-kit",
+    "formats": [
+      "FBX",
+      "GLB",
+      "OBJ"
+    ],
+    "model_files": 297,
+    "bytes": 4482244,
+    "model_count": 99
+  },
+  {
+    "slug": "coaster-kit",
+    "source_url": "https://kenney.nl/assets/coaster-kit",
+    "formats": [
+      "FBX",
+      "GLB",
+      "OBJ"
+    ],
+    "model_files": 549,
+    "bytes": 6697401,
+    "model_count": 183
+  },
+  {
+    "slug": "3d-road-tiles",
+    "source_url": "https://kenney.nl/assets/3d-road-tiles",
+    "formats": [
+      "GLTF",
+      "OBJ"
+    ],
+    "model_files": 604,
+    "bytes": 3683526,
+    "model_count": 302
+  }
+]

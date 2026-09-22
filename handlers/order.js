@@ -1,0 +1,29 @@
+import { downloadUrl } from '../lib/delivery.js';
+import { customer, sameOrigin } from '../lib/customer-auth.js';
+import { body, cleanEmail, fail, json, method, orderView, validateEmail } from '../lib/http.js';
+import { getOrder, getOrderAssets } from '../lib/store.js';
+
+export default { async fetch(request) {
+  try {
+    method(request, 'POST');
+    sameOrigin(request);
+    const user = await customer(request);
+    if (!user && request.headers.get('cookie')?.includes('polyloot_customer=')) return json({ error: 'กรุณาเข้าสู่ระบบอีกครั้ง' }, 401);
+    const input = await body(request);
+    if (typeof input.id !== 'string' || !/^GA-[A-F0-9]{24}$/.test(input.id)) {
+      return json({ error: 'ไม่พบคำสั่งซื้อนี้' }, 404);
+    }
+    const order = await getOrder(input.id);
+    if (!order || (user && order.customer_id !== user.id)) return json({ error: 'ไม่พบคำสั่งซื้อนี้' }, 404);
+    if (!user && (!validateEmail(input.email) || cleanEmail(input.email) !== cleanEmail(order.email))) return json({ error: 'ไม่พบคำสั่งซื้อนี้' }, 404);
+    if (user && input.email && (!validateEmail(input.email) || cleanEmail(input.email) !== cleanEmail(order.email))) return json({ error: 'ไม่พบคำสั่งซื้อนี้' }, 404);
+    const origin = (process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || process.env.PUBLIC_SITE_URL)?.replace(/\/$/, '') || new URL(request.url).origin;
+    const assets = await getOrderAssets(order);
+    if (!user) {
+      const { customerName, email, emailStatus, ...tracking } = orderView(order, assets);
+      return json({ order: tracking });
+    }
+    const downloadUrls = order.status === 'PAID' ? Object.fromEntries(assets.map(asset => [asset.id, downloadUrl(order, origin, asset.id)])) : {};
+    return json({ order: orderView(order, assets, order.status === 'PAID' ? { downloadUrls, downloadUrl: downloadUrls[assets[0]?.id] } : {}) });
+  } catch (error) { return fail(error); }
+} };

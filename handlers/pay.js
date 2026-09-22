@@ -1,0 +1,34 @@
+import { deliverEmail, downloadUrl } from '../lib/delivery.js';
+import { customer, sameOrigin } from '../lib/customer-auth.js';
+import { isAdmin } from '../lib/admin-auth.js';
+import { body, fail, json, method, orderView } from '../lib/http.js';
+import { getOrder, getOrderAssets, updateOrder } from '../lib/store.js';
+
+export default { async fetch(request) {
+  try {
+    method(request, 'POST');
+    sameOrigin(request);
+    const user = await customer(request);
+    const admin = isAdmin(request);
+    if (!user && !admin) return json({ error: 'กรุณาเข้าสู่ระบบ' }, 401);
+    const input = await body(request);
+    if (typeof input.id !== 'string' || !/^GA-[A-F0-9]{24}$/.test(input.id)) {
+      return json({ error: 'ไม่พบคำสั่งซื้อนี้' }, 404);
+    }
+    let order = await getOrder(input.id);
+    if (!order || (!admin && order.customer_id !== user.id)) return json({ error: 'ไม่พบคำสั่งซื้อนี้' }, 404);
+    if (order.status === 'CANCELLED') return json({ error: 'คำสั่งซื้อนี้ถูกยกเลิกแล้ว' }, 409);
+    const assets = await getOrderAssets(order);
+    const origin = (process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || process.env.PUBLIC_SITE_URL)?.replace(/\/$/, '') || new URL(request.url).origin;
+    if (order.status === 'PENDING') {
+      order = await updateOrder(order.id, { status: 'PAID', paid_at: new Date().toISOString() }, 'PENDING') || await getOrder(order.id);
+      if (order.status === 'CANCELLED') return json({ error: 'คำสั่งซื้อนี้ถูกยกเลิกแล้ว' }, 409);
+    }
+    let delivery = { emailStatus: order.email_status, downloadUrls: Object.fromEntries(assets.map(asset => [asset.id, downloadUrl(order, origin, asset.id)])) };
+    if (order.email_status !== 'SENT' || input.forceEmail || input.action === 'retry-email') {
+      delivery = await deliverEmail(order, assets, origin);
+      order = await updateOrder(order.id, { email_status: delivery.emailStatus });
+    }
+    return json({ order: orderView(order, assets, { downloadUrls: delivery.downloadUrls, downloadUrl: delivery.downloadUrls[assets[0]?.id] }) });
+  } catch (error) { return fail(error); }
+} };
