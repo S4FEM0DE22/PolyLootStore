@@ -47,4 +47,10 @@ html[data-theme='dark'] .hero-carousel-arrow { background: #1b2923 !important; b
 html[data-theme='dark'] .hero-carousel-arrow:hover { background: #355640 !important; color: #fff !important; }
 html[data-theme='dark'] .hero-dot { background: rgba(165, 209, 170, 0.25) !important; }
 html[data-theme='dark'] .hero-dot.is-active { background: #a5d1aa !important; }
+html[data-theme='dark'] .hero-carousel-counter { color: var(--ink) !important; }
+html[data-theme='dark'] .hero-counter-cur { color: #a5d1aa !important; }
+html[data-theme='dark'] .hero-counter-sep { color: var(--muted) !important; }
+html[data-theme='dark'] .hero-counter-total { color: var(--muted) !important; }
+html[data-theme='dark'] .hero-carousel-track-bar { background: rgba(165, 209, 170, 0.2) !important; }
+html[data-theme='dark'] .hero-carousel-progress-fill { background: #a5d1aa !important; }
 @media print { html[data-theme='dark'] body, html[data-theme='dark'] .status-panel { background: white !important; color: black !important; } }

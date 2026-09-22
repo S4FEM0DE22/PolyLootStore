@@ -267,7 +267,8 @@ function initHeroCarousel(total) {
   if (!carousel || total <= 1) return;
 
   const slides = Array.from(carousel.querySelectorAll('.hero-slide'));
-  const dots = Array.from(carousel.querySelectorAll('.hero-dot'));
+  const counterCur = carousel.querySelector('#hero-counter-cur');
+  const progressFill = carousel.querySelector('#hero-progress-fill');
   const prevBtn = carousel.querySelector('.hero-carousel-arrow.prev');
   const nextBtn = carousel.querySelector('.hero-carousel-arrow.next');
   let currentIndex = 0;
@@ -288,11 +289,8 @@ function initHeroCarousel(total) {
       }
     });
 
-    dots.forEach((dot, idx) => {
-      const active = idx === currentIndex;
-      dot.classList.toggle('is-active', active);
-      dot.setAttribute('aria-selected', String(active));
-    });
+    if (counterCur) counterCur.textContent = String(currentIndex + 1);
+    if (progressFill) progressFill.style.width = `${((currentIndex + 1) / total) * 100}%`;
   }
 
   function nextSlide() {
@@ -328,17 +326,6 @@ function initHeroCarousel(total) {
     e.stopPropagation();
     nextSlide();
     resetTimer();
-  });
-
-  dots.forEach(dot => {
-    dot.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const targetIdx = parseInt(dot.dataset.heroDot, 10);
-      if (!Number.isNaN(targetIdx)) {
-        goToSlide(targetIdx, targetIdx > currentIndex ? 1 : -1);
-        resetTimer();
-      }
-    });
   });
 
   carousel.addEventListener('pointerenter', () => { isPaused = true; });
@@ -392,17 +379,37 @@ function initHeroCarousel(total) {
 }
 
 function home() {
-  const featured = assets.filter(item => item.is_featured);
-  const displayAssets = (featured.length ? featured : assets).slice(0, 5);
+  const activeAssets = assets.filter(item => item.active !== false && !item.is_hidden);
+  const featured = activeAssets.filter(item => item.is_featured);
+  const displayAssets = (featured.length ? featured : activeAssets).slice(0, 5);
   const categories = [['Characters','ตัวละคร'],['Environments','ฉากและพื้นที่'],['Weapons','อาวุธ'],['Vehicles','ยานพาหนะ'],['Props','สิ่งของประกอบ']];
-  const heroAssets = (assets.filter(item => item.cover).length ? assets.filter(item => item.cover) : assets).slice(0, 10);
+
+  // Rotate through ALL active products across the entire store (exclude deleted or hidden ones)
+  const heroAssets = activeAssets.filter(item => item.cover);
+  const finalHeroAssets = heroAssets.length ? heroAssets : activeAssets;
+  const total = finalHeroAssets.length;
+
   setView(`
-    <section class="home-hero"><div class="home-hero-copy"><span class="home-eyebrow">POLYLOOT / 3D GAME ASSETS</span><h1>หาแอสเซ็ตที่ใช่<br>แล้วสร้างเกมของคุณ</h1><p>โมเดล 3D คุณภาพสูงสำหรับนักพัฒนาเกม เลือกดูรายละเอียดสเปกไฟล์ ทดลองสั่งซื้อ และรับไฟล์ในคลังของคุณได้ทันที</p><div class="hero-actions"><a class="pill-button dark" href="#catalog">เลือกดูสินค้า <span aria-hidden="true">↗</span></a><a class="hero-text-link" href="#library">ไปที่คลังของฉัน →</a></div><div class="dev-stats-strip"><div class="dev-stat-box"><span class="stat-value">34+</span><span class="stat-caption">Game Packs</span></div><div class="dev-stat-box"><span class="stat-value">1,500+</span><span class="stat-caption">3D Models</span></div><div class="dev-stat-box"><span class="stat-value">Unity · UE · Godot</span><span class="stat-caption">Compatible</span></div><div class="dev-stat-box"><span class="stat-value">CC0 1.0</span><span class="stat-caption">Royalty-Free</span></div></div><p class="hero-disclaimer">ร้านสาธิตเพื่อการศึกษา · ราคาจำลอง · ไฟล์ต้นฉบับคุณภาพจาก Kenney</p></div><div class="home-hero-art"><div class="hero-carousel" id="hero-carousel" aria-label="ภาพตัวอย่างสินค้าในร้าน"><div class="hero-carousel-viewport">${heroAssets.map((item, idx) => `<a class="hero-slide${idx === 0 ? ' is-active' : ''}" href="#asset/${esc(item.id)}" data-hero-index="${idx}" aria-label="ดูรายละเอียด ${esc(item.title)}"><div class="hero-slide-card"><img src="${esc(item.cover)}" alt="ตัวอย่างชุด ${esc(item.title)}" ${idx === 0 ? 'fetchpriority="high"' : 'loading="lazy"'}><div class="hero-slide-badge"><span class="hero-badge-cat">${esc(item.category || '3D Asset')}</span><span class="hero-badge-title">${esc(item.title)}</span><span class="hero-badge-price">${money(item.price)}</span></div></div></a>`).join('')}</div><div class="hero-carousel-bar"><button type="button" class="hero-carousel-arrow prev" aria-label="สินค้าก่อนหน้า"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button><div class="hero-carousel-dots" role="tablist" aria-label="สลับภาพสินค้า">${heroAssets.map((item, idx) => `<button type="button" class="hero-dot${idx === 0 ? ' is-active' : ''}" role="tab" aria-selected="${idx === 0}" aria-label="ดู ${esc(item.title)}" data-hero-dot="${idx}"></button>`).join('')}</div><button type="button" class="hero-carousel-arrow next" aria-label="สินค้าถัดไป"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button></div></div></div></section>
+    <section class="home-hero"><div class="home-hero-copy"><span class="home-eyebrow">POLYLOOT / 3D GAME ASSETS</span><h1>หาแอสเซ็ตที่ใช่<br>แล้วสร้างเกมของคุณ</h1><p>โมเดล 3D คุณภาพสูงสำหรับนักพัฒนาเกม เลือกดูรายละเอียดสเปกไฟล์ ทดลองสั่งซื้อ และรับไฟล์ในคลังของคุณได้ทันที</p><div class="hero-actions"><a class="pill-button dark" href="#catalog">เลือกดูสินค้า <span aria-hidden="true">↗</span></a><a class="hero-text-link" href="#library">ไปที่คลังของฉัน →</a></div><div class="dev-stats-strip"><div class="dev-stat-box"><span class="stat-value">34+</span><span class="stat-caption">Game Packs</span></div><div class="dev-stat-box"><span class="stat-value">1,500+</span><span class="stat-caption">3D Models</span></div><div class="dev-stat-box"><span class="stat-value">Unity · UE · Godot</span><span class="stat-caption">Compatible</span></div><div class="dev-stat-box"><span class="stat-value">CC0 1.0</span><span class="stat-caption">Royalty-Free</span></div></div><p class="hero-disclaimer">ร้านสาธิตเพื่อการศึกษา · ราคาจำลอง · ไฟล์ต้นฉบับคุณภาพจาก Kenney</p></div><div class="home-hero-art"><div class="hero-carousel" id="hero-carousel" aria-label="ภาพตัวอย่างสินค้าในร้าน"><div class="hero-carousel-viewport">${finalHeroAssets.map((item, idx) => `<a class="hero-slide${idx === 0 ? ' is-active' : ''}" href="#asset/${esc(item.id)}" data-hero-index="${idx}" aria-label="ดูรายละเอียด ${esc(item.title)}"><div class="hero-slide-card"><img src="${esc(item.cover)}" alt="ตัวอย่างชุด ${esc(item.title)}" ${idx === 0 ? 'fetchpriority="high"' : 'loading="lazy"'}><div class="hero-slide-badge"><span class="hero-badge-cat">${esc(item.category || '3D Asset')}</span><span class="hero-badge-title">${esc(item.title)}</span><span class="hero-badge-price">${money(item.price)}</span></div></div></a>`).join('')}</div><div class="hero-carousel-bar"><button type="button" class="hero-carousel-arrow prev" aria-label="สินค้าก่อนหน้า" title="ก่อนหน้า"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button><div class="hero-carousel-info-center"><div class="hero-carousel-counter" aria-live="polite"><span class="hero-counter-cur" id="hero-counter-cur">1</span><span class="hero-counter-sep">/</span><span class="hero-counter-total" id="hero-counter-total">${total}</span><span class="hero-counter-label">รายการ</span></div><div class="hero-carousel-track-bar" aria-hidden="true"><div class="hero-carousel-progress-fill" id="hero-progress-fill" style="width: ${total > 0 ? (1 / total) * 100 : 0}%"></div></div></div><button type="button" class="hero-carousel-arrow next" aria-label="สินค้าถัดไป" title="ถัดไป"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button></div></div></div></section>
     <section class="home-categories" aria-labelledby="category-heading"><div class="section-title"><h2 id="category-heading">เลือกตามหมวดหมู่</h2><span>3D Assets สำหรับเกม</span></div><div class="category-grid">${categories.map(([id,label], index) => `<a href="#catalog" data-home-category="${id}" class="category-tile"><span class="category-index">0${index + 1}</span><span class="category-name">${label}</span><span class="category-english">${id}</span><span class="category-arrow" aria-hidden="true">↗</span></a>`).join('')}</div></section>
     <section class="home-featured" aria-labelledby="featured-heading"><div class="section-title"><h2 id="featured-heading">สินค้าที่แนะนำ</h2><a class="section-link" href="#catalog">ดูสินค้าทั้งหมด →</a></div><div class="product-grid">${displayAssets.map(productCard).join('')}</div></section>
     <section class="how-it-works" aria-labelledby="how-heading"><div><span class="home-eyebrow">HOW IT WORKS</span><h2 id="how-heading">จากไอเดียสู่ไฟล์พร้อมใช้</h2><p>ขั้นตอนการซื้อใน Mini Project นี้เป็นการจำลอง ไม่มีการเรียกเก็บเงินจริง</p></div><ol><li><span>01</span><strong>ค้นหาแอสเซ็ต</strong><small>กรองหมวดและดูรายละเอียดไฟล์</small></li><li><span>02</span><strong>สั่งซื้อจำลอง</strong><small>บันทึกคำสั่งซื้อและสถานะ</small></li><li><span>03</span><strong>ดาวน์โหลด</strong><small>เข้าถึงไฟล์จากคลังหลังชำระสำเร็จ</small></li></ol></section>
   `, 'home');
-  initHeroCarousel(heroAssets.length);
+  initHeroCarousel(total);
+
+  // Sync latest catalog in background so newly added, hidden, or deleted products update the carousel dynamically
+  api('assets').then(catalog => {
+    if (Array.isArray(catalog?.assets)) {
+      const newIds = catalog.assets.map(a => a.id).join(',');
+      const oldIds = assets.map(a => a.id).join(',');
+      if (newIds !== oldIds) {
+        assets = catalog.assets;
+        if (!location.hash || location.hash === '#home') {
+          home();
+        }
+      }
+    }
+  }).catch(() => {});
 }
 
 let carouselInterval = null;
@@ -1244,7 +1251,23 @@ try {
   window.addEventListener('hashchange', () => route());
   window.addEventListener('popstate', () => route());
   window.addEventListener('pageshow', event => { clearActiveFocus(); if (event.persisted) route(true); });
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') clearActiveFocus(); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      clearActiveFocus();
+      if (!location.hash || location.hash === '#home') {
+        api('assets').then(catalog => {
+          if (Array.isArray(catalog?.assets)) {
+            const newIds = catalog.assets.map(a => a.id).join(',');
+            const oldIds = assets.map(a => a.id).join(',');
+            if (newIds !== oldIds) {
+              assets = catalog.assets;
+              home();
+            }
+          }
+        }).catch(() => {});
+      }
+    }
+  });
   if (/^#(access_token|error=|error_code=)/.test(location.hash)) {
     const params = new URLSearchParams(location.hash.slice(1));
     const failed = params.has('error');

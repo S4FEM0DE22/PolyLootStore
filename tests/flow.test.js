@@ -348,14 +348,20 @@ test('home hero carousel renders multiple product slides and controls', async ()
   assert.ok(storefrontSrc.includes('hero-slide'), 'hero-slide elements should be generated');
   assert.ok(storefrontSrc.includes('hero-carousel-arrow prev'), 'previous arrow button should exist');
   assert.ok(storefrontSrc.includes('hero-carousel-arrow next'), 'next arrow button should exist');
-  assert.ok(storefrontSrc.includes('hero-carousel-dots'), 'pagination dots should exist');
+  assert.ok(storefrontSrc.includes('hero-carousel-counter'), 'carousel counter should exist');
+  assert.ok(storefrontSrc.includes('hero-progress-fill'), 'progress fill bar should exist');
   assert.ok(storefrontSrc.includes('clearInterval(heroCarouselInterval)'), 'timer cleanup should be handled');
+
+  // Verify it rotates through the entire active store catalog and filters out hidden/deleted products
+  assert.ok(storefrontSrc.includes('activeAssets = assets.filter(item => item.active !== false && !item.is_hidden)'), 'filters active and non-hidden assets');
+  assert.ok(!storefrontSrc.includes('heroAssets = (assets.filter(item => item.cover).length ? assets.filter(item => item.cover) : assets).slice(0, 10);'), 'does not slice to only 10 items');
 
   // Verify styling
   assert.ok(storeCss.includes('.hero-carousel-viewport'), 'carousel viewport styles should exist');
   assert.ok(storeCss.includes('.hero-slide.is-active'), 'active slide transition should exist');
   assert.ok(storeCss.includes('.hero-slide-badge'), 'product badge overlay should exist');
-  assert.ok(storeCss.includes('.hero-dot.is-active'), 'active dot styles should exist');
+  assert.ok(storeCss.includes('.hero-carousel-counter'), 'counter styles should exist');
+  assert.ok(storeCss.includes('.hero-carousel-progress-fill'), 'progress fill styles should exist');
 
   // Verify strict no emoji rule in carousel section
   const heroMatch = storefrontSrc.match(/function initHeroCarousel[\s\S]*?function catalog/);
