@@ -32,6 +32,7 @@ const english = {
   'ภาพรวม': 'Overview', 'ภาพรวมร้าน': 'Store overview', 'แอสเซ็ต': 'Assets',
   'ลูกค้า': 'Customers', 'คำร้อง': 'Requests', 'รีเฟรช': 'Refresh',
   'กลับหน้าร้าน': 'Back to store', 'เข้าสู่ระบบ': 'Sign in',
+  '← ย้อนกลับ': '← Back', 'ย้อนกลับ': 'Back',
   'บันทึก': 'Save', 'ยกเลิก': 'Cancel', 'รายละเอียด': 'Details'
 };
 const dictionary = { ...english, ...translations };

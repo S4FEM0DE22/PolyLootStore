@@ -368,6 +368,11 @@ test('home hero carousel renders multiple product slides and controls', async ()
   assert.ok(heroMatch, 'carousel code block found');
   const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u;
   assert.equal(emojiRegex.test(heroMatch[0]), false, 'Hero carousel must have zero emojis');
+
+  // Verify generic back button wording (not tied to specific pages)
+  assert.ok(!storefrontSrc.includes('กลับไปดูสินค้าทั้งหมด'), 'should not have specific destination in back button');
+  assert.ok(storefrontSrc.includes('data-back-fallback="#catalog">← ย้อนกลับ</button>'), 'asset page back button should use generic back text');
+  assert.ok(storefrontSrc.includes(': \'#cart\'}">← ย้อนกลับ</button>'), 'checkout back button should use generic back text');
 });
 
 

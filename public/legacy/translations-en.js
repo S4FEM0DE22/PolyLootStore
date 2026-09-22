@@ -10,6 +10,7 @@ export const translations = {
   '← กลับไปเข้าสู่ระบบ': '← Back to sign in',
   '← กลับไปดูสินค้าทั้งหมด': '← Back to all products',
   '← ย้อนกลับ': '← Back',
+  'ย้อนกลับ': 'Back',
   '+ เพิ่มแอสเซ็ต': '+ Add asset',
   '✓ คำสั่งซื้อเสร็จสมบูรณ์': '✓ Order completed',
   '3D Asset พร้อมใช้งาน': '3D asset ready',
