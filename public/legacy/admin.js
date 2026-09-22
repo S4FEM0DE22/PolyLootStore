@@ -133,7 +133,7 @@ function confirmDeleteAsset(asset) {
         </div>
       </div>
       <div class="delete-warning-box">
-        <strong>⚠️ คำเตือนการลบข้อมูล</strong>
+        <strong>คำเตือนการลบข้อมูล</strong>
         การลบจะนำไฟล์ 3D Asset และข้อมูลสินค้านี้ออกจากระบบอย่างถาวร หากเคยมีคำสั่งซื้อที่อ้างอิงถึงสินค้านี้ ระบบจะไม่สามารถลบได้ แนะนำให้ใช้ปุ่ม "ซ่อนจากหน้าร้าน" แทน
       </div>
       <div id="delete-dialog-error" class="error" role="alert"></div>
@@ -241,7 +241,7 @@ function openAssetModal(mode = 'create', asset = null) {
       <!-- Extracted Images from ZIP Picker -->
       <div class="zip-images-section" id="zip-images-section" style="display: none;">
         <div class="zip-images-head">
-          <strong>🖼️ รูปภาพตัวอย่างที่พบในไฟล์ ZIP <small id="zip-images-count"></small></strong>
+          <strong>รูปภาพตัวอย่างที่พบในไฟล์ ZIP <small id="zip-images-count"></small></strong>
           <small>คลิกรูปเพื่อเลือกเป็นภาพปกสินค้าทันที</small>
         </div>
         <div class="zip-images-grid" id="zip-images-grid"></div>
@@ -316,11 +316,11 @@ function openAssetModal(mode = 'create', asset = null) {
         หมวดหมู่สินค้า <span class="req">*</span>
         <div class="category-select-wrap">
           <select name="category" id="asset-category-select" class="field" required>
-            <option value="Characters" ${asset?.category === 'Characters' ? 'selected' : ''}>🧙‍♂️ Characters (ตัวละคร)</option>
-            <option value="Environments" ${asset?.category === 'Environments' ? 'selected' : ''}>🏰 Environments (ฉากและสภาพแวดล้อม)</option>
-            <option value="Weapons" ${asset?.category === 'Weapons' ? 'selected' : ''}>⚔️ Weapons (อาวุธ)</option>
-            <option value="Vehicles" ${asset?.category === 'Vehicles' ? 'selected' : ''}>🚗 Vehicles (ยานพาหนะ)</option>
-            <option value="Props" ${asset?.category === 'Props' ? 'selected' : (!asset ? 'selected' : '')}>📦 Props (สิ่งของและของประกอบฉาก)</option>
+            <option value="Characters" ${asset?.category === 'Characters' ? 'selected' : ''}>Characters (ตัวละคร)</option>
+            <option value="Environments" ${asset?.category === 'Environments' ? 'selected' : ''}>Environments (ฉากและสภาพแวดล้อม)</option>
+            <option value="Weapons" ${asset?.category === 'Weapons' ? 'selected' : ''}>Weapons (อาวุธ)</option>
+            <option value="Vehicles" ${asset?.category === 'Vehicles' ? 'selected' : ''}>Vehicles (ยานพาหนะ)</option>
+            <option value="Props" ${asset?.category === 'Props' ? 'selected' : (!asset ? 'selected' : '')}>Props (สิ่งของและของประกอบฉาก)</option>
           </select>
         </div>
       </label>
@@ -562,13 +562,13 @@ function openAssetModal(mode = 'create', asset = null) {
       const type = btn.dataset.template;
       let snippet = '';
       if (type === 'specs') {
-        snippet = '\n\n📌 ข้อมูลสเปกโมเดล:\n- รูปแบบ 3D: Low Poly Game Ready\n- โครงสร้าง: แยกชิ้นส่วนได้ (Modular)\n- เท็กซ์เจอร์: PBR Material รวมในแพ็ก\n- รองรับ: Mobile, PC, Console';
+        snippet = '\n\nข้อมูลสเปกโมเดล:\n- รูปแบบ 3D: Low Poly Game Ready\n- โครงสร้าง: แยกชิ้นส่วนได้ (Modular)\n- เท็กซ์เจอร์: PBR Material รวมในแพ็ก\n- รองรับ: Mobile, PC, Console';
       } else if (type === 'features') {
-        snippet = '\n\n⭐ คุณสมบัติเด่น:\n- เหมาะสำหรับเกมแนว Action / Adventure / RPG\n- นำเข้าเอนจินเกมได้ทันที (Drag & Drop Ready)\n- จุดหมุน (Pivot Points) และสเกลโมเดลตั้งค่าตรงมาตรฐาน';
+        snippet = '\n\nคุณสมบัติเด่น:\n- เหมาะสำหรับเกมแนว Action / Adventure / RPG\n- นำเข้าเอนจินเกมได้ทันที (Drag & Drop Ready)\n- จุดหมุน (Pivot Points) และสเกลโมเดลตั้งค่าตรงมาตรฐาน';
       } else if (type === 'contents') {
-        snippet = '\n\n📦 สิ่งที่รวมในแพ็กเกจนี้:\n- ไฟล์โมเดล 3D คุณภาพสูงครบชุด\n- ไฟล์ Material และ Color Palette\n- ไฟล์ตัวอย่างการประกอบฉาก';
+        snippet = '\n\nสิ่งที่รวมในแพ็กเกจนี้:\n- ไฟล์โมเดล 3D คุณภาพสูงครบชุด\n- ไฟล์ Material และ Color Palette\n- ไฟล์ตัวอย่างการประกอบฉาก';
       } else if (type === 'license') {
-        snippet = '\n\n📜 สิทธิ์การใช้งาน (License):\n- อนุญาตให้ใช้ในเกมส่วนตัวและเกมเชิงพาณิชย์ (Commercial Use)\n- ใช้งานได้ไม่จำกัดโปรเจกต์';
+        snippet = '\n\nสิทธิ์การใช้งาน (License):\n- อนุญาตให้ใช้ในเกมส่วนตัวและเกมเชิงพาณิชย์ (Commercial Use)\n- ใช้งานได้ไม่จำกัดโปรเจกต์';
       }
       descTextarea.value = (descTextarea.value.trim() + snippet).trim();
       charCounter.textContent = `${descTextarea.value.length} / 4000`;
@@ -580,7 +580,7 @@ function openAssetModal(mode = 'create', asset = null) {
     descZipStatsBtn.addEventListener('click', () => {
       if (!lastInspection) return;
       const uncompMb = (lastInspection.uncompressedBytes / 1048576).toFixed(1);
-      const snippet = `\n\n📊 ข้อมูลไฟล์ในแพ็กเกจ:\n- จำนวนโมเดล 3D: ${lastInspection.modelCount} ชิ้น\n- ไฟล์ทั้งหมด: ${lastInspection.totalFiles} ไฟล์\n- ขนาดไฟล์เมื่อแตก: ${uncompMb} MB`;
+      const snippet = `\n\nข้อมูลไฟล์ในแพ็กเกจ:\n- จำนวนโมเดล 3D: ${lastInspection.modelCount} ชิ้น\n- ไฟล์ทั้งหมด: ${lastInspection.totalFiles} ไฟล์\n- ขนาดไฟล์เมื่อแตก: ${uncompMb} MB`;
       descTextarea.value = (descTextarea.value.trim() + snippet).trim();
       charCounter.textContent = `${descTextarea.value.length} / 4000`;
       descTextarea.focus();
