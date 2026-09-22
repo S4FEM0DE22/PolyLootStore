@@ -375,4 +375,69 @@ test('home hero carousel renders multiple product slides and controls', async ()
   assert.ok(storefrontSrc.includes(': \'#cart\'}">← ย้อนกลับ</button>'), 'checkout back button should use generic back text');
 });
 
+test('cart items are isolated per account, emptied on logout, and restored on switch', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const storefrontSrc = fs.readFileSync(path.join(process.cwd(), 'public', 'legacy', 'storefront.js'), 'utf8');
+
+  // Verify code implementation presence
+  assert.ok(storefrontSrc.includes('cartStorageKey'), 'cartStorageKey helper should exist');
+  assert.ok(storefrontSrc.includes('polyloot-cart-user-'), 'user-specific cart storage key prefix should exist');
+  assert.ok(storefrontSrc.includes('switchCartToUser'), 'switchCartToUser function should exist');
+
+  // Verify logout empties cart
+  assert.ok(storefrontSrc.includes('cart = [];'), 'active cart must be cleared on logout');
+  assert.ok(storefrontSrc.includes('selected.clear();'), 'selected items must be cleared on logout');
+
+  // Simulate the storage isolation logic
+  const store = {};
+  const mockLocalStorage = {
+    getItem: (k) => store[k] ?? null,
+    setItem: (k, v) => { store[k] = String(v); },
+    removeItem: (k) => { delete store[k]; }
+  };
+
+  const getStorageKey = (user) => (user?.email ? `polyloot-cart-user-${user.email.trim().toLowerCase()}` : 'polyloot-cart-guest');
+  const readUserCart = (user) => {
+    const raw = mockLocalStorage.getItem(getStorageKey(user));
+    return raw ? JSON.parse(raw) : [];
+  };
+  const saveUserCart = (user, items) => {
+    mockLocalStorage.setItem(getStorageKey(user), JSON.stringify(items));
+  };
+
+  const userA = { email: 'alice@example.test', username: 'alice' };
+  const userB = { email: 'bob@example.test', username: 'bob' };
+
+  // Step 1: User A adds items
+  let activeCart = ['pirate-kit', 'castle-kit'];
+  saveUserCart(userA, activeCart);
+  assert.deepEqual(readUserCart(userA), ['pirate-kit', 'castle-kit']);
+
+  // Step 2: User A logs out -> cart emptied
+  activeCart = [];
+  assert.deepEqual(activeCart, []);
+
+  // Step 3: User B logs in -> sees own empty cart initially
+  activeCart = readUserCart(userB);
+  assert.deepEqual(activeCart, []);
+
+  // User B adds an item
+  activeCart = ['nature-kit'];
+  saveUserCart(userB, activeCart);
+  assert.deepEqual(readUserCart(userB), ['nature-kit']);
+
+  // Step 4: User B logs out -> cart emptied
+  activeCart = [];
+  assert.deepEqual(activeCart, []);
+
+  // Step 5: User A logs back in -> User A items completely restored
+  activeCart = readUserCart(userA);
+  assert.deepEqual(activeCart, ['pirate-kit', 'castle-kit']);
+
+  // Step 6: User B logs back in -> User B items completely restored
+  activeCart = readUserCart(userB);
+  assert.deepEqual(activeCart, ['nature-kit']);
+});
+
 

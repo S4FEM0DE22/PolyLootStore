@@ -86,11 +86,52 @@ function readSession(key, fallback) {
   try { return JSON.parse(sessionStorage.getItem(key)) ?? fallback; } catch { return fallback; }
 }
 function writeSession(key, value) { try { sessionStorage.setItem(key, JSON.stringify(value)); } catch {} }
-function readCart() {
+function cartStorageKey(user = customerUser) {
+  if (user && user.email) {
+    return `polyloot-cart-user-${user.email.trim().toLowerCase()}`;
+  }
+  return 'polyloot-cart-guest';
+}
+function readCart(user = customerUser) {
+  const key = cartStorageKey(user);
   let value;
-  try { value = JSON.parse(localStorage.getItem('polyloot-cart-v1')); } catch {}
-  if (!Array.isArray(value)) value = readSession('safe-cart', []);
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw !== null) {
+      value = JSON.parse(raw);
+    } else if (!user) {
+      const legacyRaw = localStorage.getItem('polyloot-cart-v1');
+      if (legacyRaw !== null) value = JSON.parse(legacyRaw);
+    }
+  } catch {}
+  if (!Array.isArray(value) && !user) value = readSession('safe-cart', []);
   return Array.isArray(value) ? [...new Set(value.filter(id => typeof id === 'string' && /^[a-z0-9-]{1,80}$/.test(id)))].slice(0, 20) : [];
+}
+function saveCart() {
+  const key = cartStorageKey(customerUser);
+  try {
+    localStorage.setItem(key, JSON.stringify(cart));
+    if (!customerUser) {
+      localStorage.setItem('polyloot-cart-v1', JSON.stringify(cart));
+      sessionStorage.removeItem('safe-cart');
+    }
+  } catch {}
+  refreshCartCount();
+}
+function switchCartToUser(user) {
+  if (!user || !user.email) return;
+  const userSavedCart = readCart(user);
+  const guestItems = cart;
+  const merged = [...new Set([...userSavedCart, ...guestItems])].slice(0, 20);
+  cart = merged;
+  selected = new Set(cart);
+  try {
+    localStorage.removeItem('polyloot-cart-guest');
+    localStorage.removeItem('polyloot-cart-v1');
+    sessionStorage.removeItem('safe-cart');
+  } catch {}
+  saveCart();
+  refreshCartCount();
 }
 function safeDestination(value) {
   return typeof value === 'string' && /^#(?:home|catalog|asset\/[a-z0-9-]+|cart|checkout(?:\/[a-z0-9-]+)?|order\/GA-[A-F0-9]{24}|track|history|profile|library|settings|notifications|help)$/.test(value) ? value : '#catalog';
@@ -174,6 +215,14 @@ async function api(path, payload) {
       customerUser = null;
       currentOrder = null;
       customerEmail = '';
+      cart = [];
+      selected.clear();
+      try {
+        localStorage.removeItem('polyloot-cart-guest');
+        localStorage.removeItem('polyloot-cart-v1');
+        sessionStorage.removeItem('safe-cart');
+      } catch {}
+      refreshCartCount();
       window.history.replaceState(null, '', '#login');
       authPage('login', 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง');
     }
@@ -208,7 +257,6 @@ function setView(html, active = '') {
   refreshCartCount();
   window.scrollTo(0, 0);
 }
-function saveCart() { try { localStorage.setItem('polyloot-cart-v1', JSON.stringify(cart)); sessionStorage.removeItem('safe-cart'); } catch {} refreshCartCount(); }
 function addToCart(id) { if (!cart.includes(id) && cart.length < 20) cart.push(id); selected.add(id); saveCart(); location.hash = '#cart'; cartPage(); }
 function orderTabs(active) { return `<div class="order-tabs" role="navigation" aria-label="ส่วนคำสั่งซื้อ"><a class="${active === 'track' ? 'active' : ''}" href="#track">ติดตามคำสั่งซื้อ</a><a class="${active === 'history' ? 'active' : ''}" href="#history">ประวัติการสั่งซื้อ</a></div>`; }
 function statusInfo(order) {
@@ -749,6 +797,7 @@ function authPage(mode = 'login', message = '') {
       customerUser = result.user;
       profileData = { name: customerUser.name || '', firstName: customerUser.firstName || '', lastName: customerUser.lastName || '', email: customerUser.email };
       writeSession('safe-profile', profileData);
+      switchCartToUser(customerUser);
       finishAuth();
     } catch (error) {
       document.querySelector('#live-message').innerHTML = notice(error.message);
@@ -948,8 +997,17 @@ async function orderHistory() {
 async function logoutCustomer(button) {
   button.disabled = true;
   try {
+    if (customerUser) saveCart();
     await api('customer', { action: 'logout' });
     customerUser = null;
+    cart = [];
+    selected.clear();
+    try {
+      localStorage.removeItem('polyloot-cart-guest');
+      localStorage.removeItem('polyloot-cart-v1');
+      sessionStorage.removeItem('safe-cart');
+    } catch {}
+    refreshCartCount();
     notificationCount.hidden = true;
     currentOrder = null;
     customerEmail = '';
@@ -1242,6 +1300,9 @@ try {
     profileData = { name: customerUser.name || '', firstName: customerUser.firstName || '', lastName: customerUser.lastName || '', email: customerUser.email };
     writeSession('safe-profile', profileData);
     await syncCustomerSettings();
+    cart = readCart(customerUser);
+  } else {
+    cart = readCart(null);
   }
   cart = cart.filter(id => asset(id));
   selected = new Set(cart);
@@ -1279,6 +1340,7 @@ try {
         customerUser = result.user;
         profileData = { name: customerUser.name || '', firstName: customerUser.firstName || '', lastName: customerUser.lastName || '', email: customerUser.email };
         writeSession('safe-profile', profileData);
+        switchCartToUser(customerUser);
         window.history.replaceState(null, '', '#profile');
         finishAuth();
       } catch (err) {
@@ -1297,6 +1359,7 @@ try {
       customerUser = result.user;
       profileData = { name: customerUser.name || '', firstName: customerUser.firstName || '', lastName: customerUser.lastName || '', email: customerUser.email };
       writeSession('safe-profile', profileData);
+      switchCartToUser(customerUser);
       window.history.replaceState(null, '', '#profile');
       finishAuth();
     } catch (err) {
