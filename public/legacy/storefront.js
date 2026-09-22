@@ -197,6 +197,11 @@ function setView(html, active = '') {
   navAuthAction.classList.toggle('signed-in', Boolean(customerUser));
   settingsMenuToggle.classList.toggle('is-current', active === 'settings');
   navAuthAction.setAttribute('aria-label', customerUser ? `บัญชีผู้ใช้: ${displayName || 'โปรไฟล์'}` : 'บัญชีผู้ใช้: เข้าสู่ระบบ');
+  if (customerUser?.avatarUrl) {
+    navAuthAction.innerHTML = `<img class="nav-avatar-img" src="${esc(customerUser.avatarUrl)}" alt="${esc(displayName || 'User')}"><span class="nav-auth-label">${esc(displayName || 'บัญชีผู้ใช้')}</span>`;
+  } else {
+    navAuthAction.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg><span class="nav-auth-label">${esc(customerUser ? (displayName || 'บัญชีผู้ใช้') : 'บัญชีผู้ใช้')}</span>`;
+  }
   navLinks.forEach(link => { const on = link.dataset.nav === active || (link.dataset.nav === 'orders' && ['track', 'history'].includes(active)); link.classList.toggle('active', on); if (on) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current'); });
   translateCommon(document);
   refreshCartCount();
@@ -436,12 +441,24 @@ function authPage(mode = 'login', message = '') {
     : `<label for="auth-identifier">Username หรืออีเมล</label><input id="auth-identifier" name="identifier" autocomplete="username" required maxlength="254" placeholder="Username หรืออีเมล">`;
   const passIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
   const passWrap = (id, name, auto, placeholder) => `<div class="password-wrap"><input id="${id}" name="${name}" type="password" autocomplete="${auto}" required minlength="8" maxlength="128" placeholder="${placeholder}"><button type="button" class="toggle-password" aria-label="แสดงรหัสผ่าน" aria-pressed="false">${passIcon}</button></div>`;
-  const form = `<form id="auth-form">${formFields}<label for="auth-password">รหัสผ่าน</label>${passWrap('auth-password', 'password', register ? 'new-password' : 'current-password', 'Password')}${register ? `<label for="auth-confirm">ยืนยันรหัสผ่าน</label>${passWrap('auth-confirm', 'confirmPassword', 'new-password', 'Confirm Password')}` : ''}<div id="live-message" aria-live="polite"></div><button class="pill-button dark" type="submit">${register ? 'สร้างบัญชี' : 'เข้าสู่ระบบ'}</button></form>`;
+  const googleBtn = `<button type="button" class="google-auth-btn" id="google-auth-btn"><svg class="google-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg><span>เข้าสู่ระบบด้วย Google</span></button><div class="auth-oauth-divider"><span>หรือดำเนินการด้วยอีเมล</span></div>`;
+  const form = `${googleBtn}<form id="auth-form">${formFields}<label for="auth-password">รหัสผ่าน</label>${passWrap('auth-password', 'password', register ? 'new-password' : 'current-password', 'Password')}${register ? `<label for="auth-confirm">ยืนยันรหัสผ่าน</label>${passWrap('auth-confirm', 'confirmPassword', 'new-password', 'Confirm Password')}` : ''}<div id="live-message" aria-live="polite"></div><button class="pill-button dark" type="submit">${register ? 'สร้างบัญชี' : 'เข้าสู่ระบบ'}</button></form>`;
   const content = register
     ? `<h2 class="auth-title">สร้างบัญชี</h2><p class="auth-desc">กรอกข้อมูลด้านล่างเพื่อดำเนินการต่อ</p>${form}<div class="auth-bottom"><a class="auth-switch" href="#login">มีบัญชีอยู่แล้ว? เข้าสู่ระบบ</a></div>`
     : `<h2 class="auth-title">เข้าสู่ระบบ</h2><p class="auth-desc">เข้าสู่บัญชีของคุณเพื่อดำเนินการต่อ</p>${message ? notice(message, message.startsWith('ลิงก์ยืนยัน') ? 'error' : 'success') : ''}${form}<div class="auth-bottom"><a class="auth-link" href="#forgot-password">ลืมรหัสผ่าน?</a><a class="auth-switch" href="#register">ยังไม่มีบัญชี? สมัครสมาชิก</a></div>`;
   const brandArea = `<div class="auth-brand"><div class="kicker">3D ASSET STORE</div><h1>${register ? 'สร้างเรื่องใหม่<br>เริ่มได้ที่นี่' : 'ยินดีต้อนรับ<br>กลับมา'}</h1><p>${register ? 'สร้างบัญชีเพื่อบันทึกคำสั่งซื้อและเข้าถึง 3D Asset ของคุณ' : 'เข้าสู่ระบบเพื่อดูคำสั่งซื้อและเข้าถึง 3D Asset ของคุณ'}</p></div>`;
   setView(`<section class="auth-layout">${brandArea}<div class="white-panel auth-card">${content}</div></section>`, register ? 'register' : 'login');
+  document.querySelector('#google-auth-btn')?.addEventListener('click', async () => {
+    const btn = document.querySelector('#google-auth-btn');
+    btn.disabled = true;
+    try {
+      const res = await api('customer', { action: 'google-auth-url' });
+      if (res.url) window.location.href = res.url;
+    } catch (err) {
+      document.querySelector('#live-message').innerHTML = notice(err.message || 'ไม่สามารถเชื่อมต่อ Google ได้');
+      btn.disabled = false;
+    }
+  });
   document.querySelectorAll('.toggle-password').forEach(btn => btn.addEventListener('click', e => {
     const input = e.currentTarget.previousElementSibling;
     const isPass = input.type === 'password';
@@ -713,12 +730,20 @@ function profile(feedback = null) {
   setView(`${pageHead('บัญชีของฉัน', 'จัดการโปรไฟล์และตั้งค่าบัญชีของคุณ')}
     <section class="white-panel dashboard-panel">
       <div class="dashboard-header">
-        <div class="dashboard-avatar" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <div class="profile-avatar-container">
+          <div class="dashboard-avatar" id="avatar-preview-wrap">
+            ${customerUser.avatarUrl ? `<img src="${esc(customerUser.avatarUrl)}" alt="${esc(headerName)}" class="profile-avatar-img">` : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`}
+          </div>
+          <label for="avatar-file-input" class="avatar-upload-btn" title="คลิกเพื่ออัปโหลดรูปภาพโปรไฟล์ใหม่">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <span>เปลี่ยนรูป</span>
+          </label>
+          <input type="file" id="avatar-file-input" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none">
         </div>
         <div class="dashboard-meta">
           <h2>${esc(headerName)}</h2>
-          <p>${esc(customerUser.email)}</p>
+          <p class="dashboard-email">${esc(customerUser.email)}</p>
+          <span class="dashboard-user-tag">@${esc(customerUser.username || 'user')}</span>
         </div>
       </div>
       <div class="dashboard-body">
@@ -727,8 +752,8 @@ function profile(feedback = null) {
           <form id="profile-form" class="profile-form">
             <div class="form-group">
               <label for="profile-username">Username</label>
-              <input id="profile-username" name="username" value="${esc(customerUser.username || '')}" ${customerUser.username ? 'readonly' : 'required minlength="3" maxlength="24" pattern="[A-Za-z0-9_]{3,24}"'} placeholder="Username">
-              ${customerUser.username ? '' : '<p class="field-note">ตั้ง Username สำหรับเข้าสู่ระบบ (3–24 ตัว ใช้ a-z, 0-9 หรือ _)</p>'}
+              <input id="profile-username" name="username" value="${esc(customerUser.username || '')}" required minlength="3" maxlength="24" pattern="[A-Za-z0-9_]{3,24}" placeholder="Username">
+              <p class="field-note">Username สำหรับเข้าสู่ระบบและระบุตัวตน (3–24 ตัว ใช้ a-z, 0-9 หรือ _)</p>
             </div>
             <div class="form-group">
               <label for="profile-first">ชื่อ</label>
@@ -783,7 +808,7 @@ function profile(feedback = null) {
     button.textContent = 'กำลังบันทึก...';
     try {
       const payload = { action: 'update-profile', first, last };
-      if (!customerUser.username && username) payload.username = username;
+      if (username) payload.username = username;
       const result = await api('customer', payload);
       customerUser = result.user;
       profileData = {
@@ -800,6 +825,24 @@ function profile(feedback = null) {
       document.querySelector('#live-message').innerHTML = notice(error.message);
       button.disabled = false;
       button.textContent = 'บันทึกข้อมูล';
+    }
+  });
+  document.querySelector('#avatar-file-input')?.addEventListener('change', async event => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const msg = document.querySelector('#live-message');
+    msg.innerHTML = '<div class="notice">กำลังอัปโหลดรูปภาพ...</div>';
+    try {
+      const formData = new FormData();
+      formData.append('action', 'update-avatar');
+      formData.append('avatar_file', file);
+      const res = await fetch('/api/customer', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'อัปโหลดรูปโปรไฟล์ไม่สำเร็จ');
+      customerUser = data.user;
+      profile({ text: 'เปลี่ยนรูปโปรไฟล์เรียบร้อยแล้ว', kind: 'success' });
+    } catch (err) {
+      msg.innerHTML = notice(err.message);
     }
   });
   document.querySelector('#customer-logout').addEventListener('click', event => logoutCustomer(event.currentTarget));
@@ -947,10 +990,39 @@ try {
     const params = new URLSearchParams(location.hash.slice(1));
     const failed = params.has('error');
     const recovery = params.get('type') === 'recovery' && params.has('access_token');
-    resetToken = recovery ? params.get('access_token') : '';
-    window.history.replaceState(null, '', recovery ? '#reset-password' : '#login');
-    if (recovery) resetPage();
-    else authPage('login', failed ? 'ลิงก์ยืนยันหมดอายุหรือไม่ถูกต้อง' : 'ยืนยันอีเมลแล้ว กรุณาเข้าสู่ระบบ');
+    const isGoogleAuth = params.has('access_token') && !recovery;
+
+    if (isGoogleAuth) {
+      const accessToken = params.get('access_token');
+      try {
+        const result = await api('customer', { action: 'google-session', accessToken });
+        customerUser = result.user;
+        profileData = { name: customerUser.name || '', firstName: customerUser.firstName || '', lastName: customerUser.lastName || '', email: customerUser.email };
+        writeSession('safe-profile', profileData);
+        window.history.replaceState(null, '', '#profile');
+        finishAuth();
+      } catch (err) {
+        window.history.replaceState(null, '', '#login');
+        authPage('login', err.message || 'การเข้าสู่ระบบด้วย Google ไม่สำเร็จ');
+      }
+    } else {
+      resetToken = recovery ? params.get('access_token') : '';
+      window.history.replaceState(null, '', recovery ? '#reset-password' : '#login');
+      if (recovery) resetPage();
+      else authPage('login', failed ? 'ลิงก์ยืนยันหมดอายุหรือไม่ถูกต้อง' : 'ยืนยันอีเมลแล้ว กรุณาเข้าสู่ระบบ');
+    }
+  } else if (location.hash === '#demo_google_login') {
+    try {
+      const result = await api('customer', { action: 'google-session', accessToken: 'demo-google-token' });
+      customerUser = result.user;
+      profileData = { name: customerUser.name || '', firstName: customerUser.firstName || '', lastName: customerUser.lastName || '', email: customerUser.email };
+      writeSession('safe-profile', profileData);
+      window.history.replaceState(null, '', '#profile');
+      finishAuth();
+    } catch (err) {
+      window.history.replaceState(null, '', '#login');
+      authPage('login', err.message || 'การเข้าสู่ระบบด้วย Google ไม่สำเร็จ');
+    }
   } else if (location.hash.startsWith('#reset-password?token=')) {
     resetToken = new URLSearchParams(location.hash.split('?')[1]).get('token') || '';
     window.history.replaceState(null, '', '#reset-password');

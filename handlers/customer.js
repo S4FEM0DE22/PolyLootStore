@@ -1,7 +1,23 @@
-import { claimUsername, clearSessionCookie, customer, forgotPassword, login, normalizeUserNames, register, resetPassword, sameOrigin, sessionCookie, updateCustomerProfile } from '../lib/customer-auth.js';
+import {
+  changeUsername,
+  claimUsername,
+  clearSessionCookie,
+  customer,
+  forgotPassword,
+  getGoogleAuthUrl,
+  login,
+  normalizeUserNames,
+  register,
+  resetPassword,
+  sameOrigin,
+  sessionCookie,
+  updateCustomerAvatar,
+  updateCustomerProfile,
+  verifyGoogleToken
+} from '../lib/customer-auth.js';
 import { downloadUrl } from '../lib/delivery.js';
 import { body, cleanEmail, fail, json, orderView, validateEmail } from '../lib/http.js';
-import { listCustomerOrders, listAllAssets } from '../lib/store.js';
+import { listCustomerOrders, listAllAssets, uploadCoverFile } from '../lib/store.js';
 
 function reply(data, status = 200, cookie) {
   const headers = { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' };
@@ -17,7 +33,8 @@ function publicUser(user) {
     first_name: names.firstName,
     last_name: names.lastName,
     email: user.email,
-    username: user.username || null
+    username: user.username || null,
+    avatarUrl: user.avatarUrl || user.avatar_url || null
   };
 }
 const validUsername = value => typeof value === 'string' && /^[a-z0-9_]{3,24}$/.test(value);
@@ -40,6 +57,39 @@ export default { async fetch(request) {
     sameOrigin(request);
     const input = await body(request);
     if (input.action === 'logout') return reply({ user: null }, 200, clearSessionCookie(request));
+    if (input.action === 'google-auth-url') {
+      const origin = (process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || process.env.PUBLIC_SITE_URL)?.replace(/\/$/, '') || url.origin;
+      const authUrl = getGoogleAuthUrl(origin);
+      return json({ url: authUrl });
+    }
+    if (input.action === 'google-session') {
+      const accessToken = typeof input.accessToken === 'string' ? input.accessToken.trim() : '';
+      if (!accessToken) return json({ error: 'ไม่พบ Access Token' }, 400);
+      const user = await verifyGoogleToken(accessToken);
+      return reply({ user: publicUser(user) }, 200, sessionCookie(request, user));
+    }
+    if (input.action === 'update-avatar') {
+      const user = await customer(request);
+      if (!user) return json({ error: 'กรุณาเข้าสู่ระบบ' }, 401);
+      let newAvatarUrl = typeof input.avatarUrl === 'string' ? input.avatarUrl.trim() : '';
+      if (input.avatar_file && typeof input.avatar_file.arrayBuffer === 'function') {
+        const file = input.avatar_file;
+        if (file.size <= 0) return json({ error: 'ไฟล์รูปภาพว่างเปล่า' }, 400);
+        if (file.size > 5 * 1024 * 1024) return json({ error: 'ขนาดไฟล์รูปภาพต้องไม่เกิน 5MB' }, 400);
+        const mimeType = file.type || 'image/jpeg';
+        if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(mimeType)) {
+          return json({ error: 'รองรับไฟล์รูปภาพ JPG, PNG, WEBP หรือ GIF' }, 400);
+        }
+        const ext = mimeType === 'image/png' ? 'png' : mimeType === 'image/webp' ? 'webp' : mimeType === 'image/gif' ? 'gif' : 'jpg';
+        const filename = `avatar-${user.id}-${Date.now()}.${ext}`;
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const uploadRes = await uploadCoverFile({ filename, buffer, mimeType });
+        newAvatarUrl = uploadRes.path;
+      }
+      if (!newAvatarUrl) return json({ error: 'กรุณาระบุ URL หรือเลือกไฟล์รูปภาพ' }, 400);
+      const updatedUser = await updateCustomerAvatar({ ...user }, newAvatarUrl);
+      return reply({ user: publicUser(updatedUser), avatarUrl: newAvatarUrl }, 200, sessionCookie(request, updatedUser));
+    }
     if (input.action === 'claim-username') {
       const user = await customer(request);
       if (!user) return json({ error: 'กรุณาเข้าสู่ระบบ' }, 401);
@@ -57,13 +107,21 @@ export default { async fetch(request) {
       if (!first) return json({ error: 'กรุณากรอกชื่อ' }, 400);
       if (first.length > 80 || last.length > 80) return json({ error: 'ชื่อหรือนามสกุลยาวเกินไป (ไม่เกิน 80 ตัวอักษร)' }, 400);
       let currentUsername = user.username;
-      if (!currentUsername && typeof input.username === 'string' && input.username.trim()) {
-        const claim = input.username.trim().toLowerCase();
-        if (!validUsername(claim)) return json({ error: 'Username ต้องมี 3–24 ตัว ใช้ a-z, 0-9 หรือ _' }, 400);
-        if (!await claimUsername(user, claim)) return json({ error: 'Username นี้มีคนใช้แล้ว' }, 409);
-        currentUsername = claim;
+      const targetUsername = typeof input.username === 'string' ? input.username.trim().toLowerCase() : '';
+      if (targetUsername && targetUsername !== currentUsername) {
+        if (!validUsername(targetUsername)) return json({ error: 'Username ต้องมี 3–24 ตัว ใช้ a-z, 0-9 หรือ _' }, 400);
+        if (!currentUsername) {
+          if (!await claimUsername(user, targetUsername)) return json({ error: 'Username นี้มีคนใช้แล้ว' }, 409);
+        } else {
+          await changeUsername(user, targetUsername);
+        }
+        currentUsername = targetUsername;
       }
-      const updatedUser = await updateCustomerProfile({ ...user, username: currentUsername }, first, last);
+      let currentUser = { ...user, username: currentUsername };
+      if (typeof input.avatarUrl === 'string' && input.avatarUrl.trim() && input.avatarUrl.trim() !== user.avatarUrl) {
+        currentUser = await updateCustomerAvatar(currentUser, input.avatarUrl.trim());
+      }
+      const updatedUser = await updateCustomerProfile(currentUser, first, last);
       return reply({ user: publicUser(updatedUser) }, 200, sessionCookie(request, updatedUser));
     }
     if (input.action === 'reset-password') {

@@ -205,3 +205,59 @@ test('settings persist and notifications are private and markable', async () => 
   const restored = await settingsApi.fetch(post('/api/settings', { action: 'update-store', contact_email: originalSettings.contact_email, contact_phone: originalSettings.contact_phone, support_hours: originalSettings.support_hours, announcement: originalSettings.announcement, faq: originalSettings.faq }, adminCookie));
   assert.equal(restored.status, 200);
 });
+
+test('google auth session, changing username, and avatar updates work seamlessly', async () => {
+  // 1. Request Google Auth URL
+  const authUrlRes = await customerApi.fetch(post('/api/customer', { action: 'google-auth-url' }));
+  assert.equal(authUrlRes.status, 200);
+  const { url } = await authUrlRes.json();
+  assert.ok(url.includes('google'));
+
+  // 2. Exchange Google Session (using demo token for local test environment)
+  const tokenTag = randomBytes(4).toString('hex');
+  const sessionRes = await customerApi.fetch(post('/api/customer', { action: 'google-session', accessToken: 'demo-google-token-' + tokenTag }));
+  assert.equal(sessionRes.status, 200);
+  const sessionData = await sessionRes.json();
+  assert.ok(sessionData.user);
+  assert.ok(sessionData.user.username.startsWith('poly_'));
+  assert.ok(sessionData.user.avatarUrl);
+  const customerCookie = sessionRes.headers.get('set-cookie').split(';')[0];
+
+  // 3. Change Username via update-profile
+  const newUsername = 'poly_ninja_' + randomBytes(3).toString('hex');
+  const updateProfileRes = await customerApi.fetch(post('/api/customer', {
+    action: 'update-profile',
+    first: 'Poly',
+    last: 'Master',
+    username: newUsername
+  }, customerCookie));
+  assert.equal(updateProfileRes.status, 200);
+  const updatedData = await updateProfileRes.json();
+  assert.equal(updatedData.user.username, newUsername);
+  assert.equal(updatedData.user.name, 'Poly Master');
+  const updatedCookie = updateProfileRes.headers.get('set-cookie').split(';')[0];
+
+  // 4. Update Avatar via update-avatar
+  const avatarFormData = new FormData();
+  avatarFormData.set('action', 'update-avatar');
+  avatarFormData.set('avatar_file', new Blob([Buffer.from([0x89, 0x50, 0x4e, 0x47])], { type: 'image/png' }), 'avatar.png');
+  const updateAvatarRes = await customerApi.fetch(new Request(base + '/api/customer', {
+    method: 'POST',
+    headers: { Cookie: updatedCookie, Origin: base },
+    body: avatarFormData
+  }));
+  assert.equal(updateAvatarRes.status, 200);
+  const avatarData = await updateAvatarRes.json();
+  assert.ok(avatarData.avatarUrl);
+  assert.equal(avatarData.user.avatarUrl, avatarData.avatarUrl);
+  const avatarCookie = updateAvatarRes.headers.get('set-cookie').split(';')[0];
+
+  // 5. Verify Session returns the updated user, username and avatar
+  const getSessionRes = await customerApi.fetch(new Request(base + '/api/customer?view=session', {
+    headers: { Cookie: avatarCookie }
+  }));
+  assert.equal(getSessionRes.status, 200);
+  const currentSession = await getSessionRes.json();
+  assert.equal(currentSession.user.username, newUsername);
+  assert.equal(currentSession.user.avatarUrl, avatarData.avatarUrl);
+});

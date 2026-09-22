@@ -10,3 +10,4 @@ private-assets/
 out/
 *.tsbuildinfo
 .npm-cache/
+public/assets/previews/uploads/

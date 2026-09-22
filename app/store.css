@@ -967,3 +967,117 @@ select.styled-select:hover,.settings-card select.field:hover{border-color:var(--
   box-shadow: 0 3px 10px rgba(45, 80, 60, 0.22);
 }
 
+/* Google OAuth & Avatar Styling */
+.google-auth-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 18px;
+  background: #ffffff;
+  color: #1f2937;
+  border: 1px solid #d1d5db;
+  border-radius: 9999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.google-auth-btn:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
+}
+.google-auth-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+.auth-oauth-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 18px 0 14px;
+  color: var(--muted, #6b7280);
+  font-size: 0.85rem;
+}
+.auth-oauth-divider::before,
+.auth-oauth-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+}
+.auth-oauth-divider span {
+  padding: 0 12px;
+}
+.profile-avatar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.dashboard-avatar {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: var(--surface, #1e1e1e);
+  border: 2px solid var(--lime-line, #38ef7d);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dashboard-avatar svg {
+  width: 44px;
+  height: 44px;
+  stroke: var(--lime, #00ff87);
+}
+.profile-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.avatar-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: var(--surface, #222);
+  border: 1px solid var(--lime-line, #38ef7d);
+  color: var(--ink, #fff);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.avatar-upload-btn:hover {
+  background: var(--lime, #00ff87);
+  color: #111;
+}
+.dashboard-user-tag {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 0.85rem;
+  color: var(--lime, #00ff87);
+  background: rgba(0, 255, 135, 0.1);
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-family: monospace;
+}
+.dashboard-email {
+  color: var(--muted);
+  font-size: 0.92rem;
+  margin: 3px 0 0;
+}
+.nav-avatar-img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid var(--lime-line, #38ef7d);
+}
+
