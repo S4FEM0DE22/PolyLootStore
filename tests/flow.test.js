@@ -348,7 +348,7 @@ test('home hero carousel renders multiple product slides and controls', async ()
   assert.ok(storefrontSrc.includes('hero-slide'), 'hero-slide elements should be generated');
   assert.ok(storefrontSrc.includes('hero-carousel-arrow prev'), 'previous arrow button should exist');
   assert.ok(storefrontSrc.includes('hero-carousel-arrow next'), 'next arrow button should exist');
-  assert.ok(storefrontSrc.includes('hero-carousel-counter'), 'carousel counter should exist');
+  assert.ok(!storefrontSrc.includes('hero-carousel-counter'), 'page count numbers should not exist in markup');
   assert.ok(storefrontSrc.includes('hero-progress-fill'), 'progress fill bar should exist');
   assert.ok(storefrontSrc.includes('clearInterval(heroCarouselInterval)'), 'timer cleanup should be handled');
 
@@ -360,7 +360,7 @@ test('home hero carousel renders multiple product slides and controls', async ()
   assert.ok(storeCss.includes('.hero-carousel-viewport'), 'carousel viewport styles should exist');
   assert.ok(storeCss.includes('.hero-slide.is-active'), 'active slide transition should exist');
   assert.ok(storeCss.includes('.hero-slide-badge'), 'product badge overlay should exist');
-  assert.ok(storeCss.includes('.hero-carousel-counter'), 'counter styles should exist');
+  assert.ok(!storeCss.includes('.hero-carousel-counter'), 'counter styles should not exist');
   assert.ok(storeCss.includes('.hero-carousel-progress-fill'), 'progress fill styles should exist');
 
   // Verify strict no emoji rule in carousel section
