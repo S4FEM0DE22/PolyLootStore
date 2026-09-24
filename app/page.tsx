@@ -7,7 +7,7 @@ export default function StorePage() {
   return <>
     <div className="app-shell">
       <header className="site-header">
-        <a className="brand" href="#home" aria-label="PolyLoot หน้าร้าน"><img src="/assets/brand/polyloot.png" alt="PolyLoot" /></a>
+        <a className="brand" href="#home" aria-label="PolyLoot หน้าร้าน"><img className="theme-logo-light" src="/assets/brand/polyloot.png" alt="PolyLoot" /><img className="theme-logo-dark" src="/assets/brand/polyloot-dark.png" alt="PolyLoot" /></a>
         <button className="mobile-menu-toggle" id="mobile-menu-toggle" type="button" aria-controls="mobile-nav" aria-expanded="false" aria-label="เปิดเมนู">
           <span /><span /><span />
         </button>
@@ -43,7 +43,7 @@ export default function StorePage() {
       <main id="app" tabIndex={-1}><div className="loading">กำลังโหลดร้านแอสเซ็ต…</div></main>
       <footer className="site-footer">
         <div className="footer-top">
-          <div className="footer-brand"><img src="/assets/brand/polyloot.png" alt="PolyLoot" /><p>คลัง 3D Game Assets</p></div>
+          <div className="footer-brand"><img className="theme-logo-light" src="/assets/brand/polyloot.png" alt="PolyLoot" /><img className="theme-logo-dark" src="/assets/brand/polyloot-dark.png" alt="PolyLoot" /><p>คลัง 3D Game Assets</p></div>
           <div className="footer-nav"><a href="#catalog">แคตตาล็อก</a><a href="#cart">ตะกร้าสินค้า</a><a href="#track">ติดตามคำสั่งซื้อ</a><a href="#settings">ตั้งค่าบัญชี</a><a href="#help">เกี่ยวกับร้าน / ช่วยเหลือ</a></div>
         </div>
         <div className="footer-bottom"><span className="footer-copy">© 2026 PolyLoot</span><span className="footer-badge">DEMO ONLY · ไม่มีการรับเงินจริง</span></div>
