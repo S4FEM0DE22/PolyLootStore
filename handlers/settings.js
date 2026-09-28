@@ -1,31 +1,13 @@
-import { createHash } from 'node:crypto';
+import { getNotifications, markNotifications } from '../lib/notifications.js';
 import { isAdmin } from '../lib/admin-auth.js';
 import { customer, sameOrigin } from '../lib/customer-auth.js';
 import { body, fail, json, validateEmail } from '../lib/http.js';
-import { getCustomerPreferences, getStoreSettings, listCustomerOrders, listCustomerTickets, setCustomerPreferences, setStoreSettings } from '../lib/store.js';
+import { getCustomerPreferences, getStoreSettings, setCustomerPreferences, setStoreSettings } from '../lib/store.js';
 
 const preferenceKeys = ['theme', 'language', 'notify_orders', 'notify_support', 'notify_announcements'];
 
-async function notifications(user, preferences, settings) {
-  const [orders, tickets] = await Promise.all([listCustomerOrders(user.id), listCustomerTickets(user.id)]);
-  const rows = [];
-  if (preferences.notify_orders) for (const order of orders) rows.push({
-    id: `order:${order.id}:${order.status}`, type: 'order', status: order.status,
-    title: order.status === 'PAID' ? 'สินค้าในคำสั่งซื้อพร้อมดาวน์โหลด' : order.status === 'CANCELLED' ? 'คำสั่งซื้อถูกยกเลิก' : 'ได้รับคำสั่งซื้อแล้ว',
-    detail: order.id, href: `#order/${order.id}`, createdAt: order.paid_at || order.cancelled_at || order.created_at
-  });
-  if (preferences.notify_support) for (const ticket of tickets) rows.push({
-    id: `ticket:${ticket.id}:${ticket.status}`, type: 'support', status: ticket.status,
-    title: ticket.status === 'RESOLVED' ? 'คำร้องดำเนินการแล้ว' : ticket.status === 'IN_PROGRESS' ? 'กำลังตรวจสอบคำร้อง' : 'รับคำร้องแล้ว',
-    detail: ticket.id, href: '#help', createdAt: ticket.created_at
-  });
-  if (preferences.notify_announcements && settings.announcement) rows.push({
-    id: 'announcement:' + createHash('sha256').update(settings.announcement).digest('hex').slice(0, 16),
-    type: 'announcement', status: 'NEW', title: 'ประกาศจากร้าน', detail: settings.announcement,
-    href: '#help', createdAt: settings.updated_at || new Date(0).toISOString()
-  });
-  const read = new Set(preferences.read_ids || []);
-  return rows.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt))).slice(0, 100).map(item => ({ ...item, read: read.has(item.id) }));
+async function notifications(user) {
+  return (await getNotifications(user.id, { limit: 100, offset: 0, unread: false, type: '', since: null })).notifications;
 }
 
 export default { async fetch(request) {
@@ -37,7 +19,7 @@ export default { async fetch(request) {
       const user = await customer(request);
       if (!user) return json({ error: 'กรุณาเข้าสู่ระบบ' }, 401);
       const preferences = await getCustomerPreferences(user.id);
-      return json({ settings, preferences, notifications: await notifications(user, preferences, settings) });
+      return json({ settings, preferences, notifications: await notifications(user) });
     }
     if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
     sameOrigin(request);
@@ -62,13 +44,8 @@ export default { async fetch(request) {
       return json({ preferences: updated });
     }
     if (input.action === 'mark-read' || input.action === 'mark-all-read') {
-      const settings = await getStoreSettings();
-      const preferences = await getCustomerPreferences(user.id);
-      const available = (await notifications(user, preferences, settings)).map(item => item.id);
-      const ids = input.action === 'mark-all-read' ? available : [input.id];
-      if (ids.some(id => typeof id !== 'string' || !available.includes(id))) return json({ error: 'ไม่พบการแจ้งเตือน' }, 404);
-      const read_ids = [...new Set([...(preferences.read_ids || []), ...ids])].slice(-200);
-      await setCustomerPreferences(user.id, { read_ids });
+      if (input.action === 'mark-read' && typeof input.id !== 'string') return json({ error: 'ไม่พบการแจ้งเตือน' }, 404);
+      await markNotifications(user.id, [input.id], input.action === 'mark-all-read');
       return json({ success: true });
     }
     return json({ error: 'คำสั่งไม่ถูกต้อง' }, 400);

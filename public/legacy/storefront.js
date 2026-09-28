@@ -1,4 +1,5 @@
 import { productDetails } from './product-gallery.js';
+import { NotificationCenter } from './notification-center.js';
 import { applyDisplayPreferences, getDisplayPreferences, saveDisplayPreferences, t, translateCommon } from './settings-ui.js';
 
 const app = document.querySelector('#app');
@@ -24,6 +25,10 @@ let cart = readCart();
 let selected = new Set(cart);
 let profileData = readSession('safe-profile', { name: '', email: '' });
 let storeSettings = null;
+const notificationCenter = new NotificationCenter({
+  authenticated: () => Boolean(customerUser), onOpen: () => closeSettingsDropdown(),
+  onUnauthorized: () => { rememberDestination(location.hash || '#home'); customerUser = null; currentOrder = null; cart = []; selected.clear(); refreshCartCount(); location.hash = '#login'; authPage('login', t('เซสชันหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง', 'Session expired. Please sign in again.')); }
+});
 
 function closeMobileMenu(returnFocus = false) {
   if (!mobileMenuToggle) return;
@@ -41,6 +46,7 @@ function closeSettingsDropdown(returnFocus = false) {
   if (returnFocus && wasOpen) settingsMenuToggle.focus();
 }
 settingsMenuToggle.addEventListener('click', () => {
+  notificationCenter.close();
   const open = settingsDropdown.hidden;
   settingsDropdown.hidden = !open;
   settingsMenuToggle.setAttribute('aria-expanded', String(open));
@@ -64,9 +70,8 @@ settingsMenuWrap.addEventListener('change', async event => {
   }
   if (customerUser) {
     try {
-      const { preferences } = await api('settings?view=customer');
       const display = getDisplayPreferences();
-      await api('settings', { action: 'set-preferences', preferences: { ...preferences, theme: display.theme, language: display.language } });
+      await api('settings', { action: 'set-preferences', preferences: { theme: display.theme, language: display.language } });
     } catch { /* The browser preference is still saved if account sync is unavailable. */ }
   }
 });
@@ -78,7 +83,7 @@ mobileMenuToggle?.addEventListener('click', () => {
   if (open) siteHeader.querySelector('.nav-pills a:not([hidden])')?.focus();
 });
 siteHeader.querySelector('.nav-pills')?.addEventListener('click', event => { if (event.target.closest('a')) closeMobileMenu(); });
-document.addEventListener('keydown', event => { if (event.key === 'Escape') { if (!settingsDropdown.hidden) closeSettingsDropdown(true); else closeMobileMenu(true); } });
+document.addEventListener('keydown', event => { if (event.key === 'Escape' && !event.defaultPrevented) { if (!settingsDropdown.hidden) closeSettingsDropdown(true); else closeMobileMenu(true); } });
 document.addEventListener('click', event => { if (!settingsMenuWrap.contains(event.target)) closeSettingsDropdown(); if (!siteHeader.contains(event.target)) closeMobileMenu(); });
 window.addEventListener('resize', () => { closeSettingsDropdown(); if (window.innerWidth > 800) closeMobileMenu(); });
 
@@ -143,6 +148,7 @@ function clearActiveFocus() {
   }
 }
 function finishAuth() {
+  notificationCenter.reset();
   const next = safeDestination(authNext);
   rememberDestination('#catalog');
   window.history.replaceState(null, '', next);
@@ -154,8 +160,7 @@ async function syncCustomerSettings() {
   try {
     const result = await api('settings?view=customer');
     if (!localStorage.getItem('polyloot-display-preferences-v1')) saveDisplayPreferences({ theme: result.preferences.theme, language: result.preferences.language });
-    notificationCount.textContent = Math.min(9, result.notifications.filter(item => !item.read).length) || '';
-    notificationCount.hidden = !notificationCount.textContent;
+    await notificationCenter.refresh();
     translateCommon(document);
   } catch {}
 }
@@ -213,6 +218,7 @@ async function api(path, payload) {
     if (response.status === 401 && customerUser) {
       rememberDestination(location.hash || '#catalog');
       customerUser = null;
+      notificationCenter.reset();
       currentOrder = null;
       customerEmail = '';
       cart = [];
@@ -232,6 +238,7 @@ async function api(path, payload) {
 }
 function refreshCartCount() { cartCount.textContent = cart.length; cartCount.hidden = cart.length === 0; cartCount.parentElement.setAttribute('aria-label', `ตะกร้าสินค้า ${cart.length} รายการ`); }
 function setView(html, active = '') {
+  notificationCenter.close();
   closeSettingsDropdown();
   closeMobileMenu();
   clearActiveFocus();
@@ -852,6 +859,7 @@ function resetPage() {
       customerUser = null;
       currentOrder = null;
       location.hash = '#login';
+      notificationCenter.reset();
       authPage('login', 'เปลี่ยนรหัสผ่านแล้ว กรุณาเข้าสู่ระบบอีกครั้ง');
     } catch (error) { document.querySelector('#live-message').innerHTML = notice(error.message); button.disabled = false; button.textContent = originalText; }
   });
@@ -1001,6 +1009,7 @@ async function logoutCustomer(button) {
     await api('customer', { action: 'logout' });
     customerUser = null;
     cart = [];
+    notificationCenter.reset();
     selected.clear();
     try {
       localStorage.removeItem('polyloot-cart-guest');
@@ -1201,16 +1210,7 @@ async function helpPage() {
   await showTickets();
 }
 
-async function refreshNotificationCount() {
-  if (!customerUser) { notificationCount.hidden = true; return; }
-  try {
-    const result = await api('settings?view=customer');
-    const count = result.notifications.filter(item => !item.read).length;
-    notificationCount.textContent = count > 9 ? '9+' : String(count);
-    notificationCount.hidden = count === 0;
-    document.querySelector('.nav-notifications')?.setAttribute('aria-label', `${t('การแจ้งเตือน', 'Notifications')} ${count}`);
-  } catch { notificationCount.hidden = true; }
-}
+async function refreshNotificationCount() { await notificationCenter.refresh(); }
 
 async function settingsPage() {
   setView(`<section class="white-panel settings-panel"><h1>${t('ตั้งค่าบัญชี', 'Settings')}</h1><p>${t('กำลังโหลดการตั้งค่า...', 'Loading settings...')}</p></section>`, 'settings');
@@ -1244,16 +1244,8 @@ async function settingsPage() {
 
 async function notificationsPage() {
   if (!requireLogin('#notifications')) return;
-  setView(`<section class="white-panel notifications-panel"><h1>${t('การแจ้งเตือน', 'Notifications')}</h1><p>${t('กำลังโหลด...', 'Loading...')}</p></section>`, 'notifications');
-  try {
-    const result = await api('settings?view=customer');
-    if (location.hash !== '#notifications') return;
-    const count = result.notifications.filter(item => !item.read).length;
-    const labels = { PAID: t('พร้อมดาวน์โหลด', 'Ready to download'), PENDING: t('รอชำระ', 'Pending'), CANCELLED: t('ยกเลิก', 'Cancelled'), OPEN: t('รับเรื่องแล้ว', 'Received'), IN_PROGRESS: t('กำลังตรวจสอบ', 'In progress'), RESOLVED: t('ดำเนินการแล้ว', 'Resolved'), NEW: t('ใหม่', 'New') };
-    setView(`${pageHead(t('การแจ้งเตือน', 'Notifications'), `${count} ${t('รายการที่ยังไม่อ่าน', 'unread')}`)}<section class="white-panel notifications-panel"><div class="notifications-head"><h2>${t('รายการล่าสุด', 'Recent updates')}</h2>${count ? `<button id="mark-all-read" class="pill-button outline" type="button">${t('ทำเครื่องหมายว่าอ่านทั้งหมด', 'Mark all as read')}</button>` : ''}</div>${result.notifications.length ? result.notifications.map(item => `<article class="notification-row ${item.read ? 'is-read' : ''}"><div class="notification-dot" aria-hidden="true"></div><div><strong>${t(item.title, ({ 'ได้รับคำสั่งซื้อแล้ว': 'Order received', 'สินค้าในคำสั่งซื้อพร้อมดาวน์โหลด': 'Your assets are ready', 'คำสั่งซื้อถูกยกเลิก': 'Order cancelled', 'รับคำร้องแล้ว': 'Request received', 'กำลังตรวจสอบคำร้อง': 'Request in progress', 'คำร้องดำเนินการแล้ว': 'Request resolved', 'ประกาศจากร้าน': 'Store announcement' })[item.title])}</strong><p>${esc(item.detail)}</p><small>${labels[item.status] || ''} · ${esc(new Intl.DateTimeFormat(getDisplayPreferences().language === 'en' ? 'en-US' : 'th-TH', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(item.createdAt)))}</small></div><div class="notification-actions"><a href="${esc(item.href)}">${t('เปิดดู', 'View')}</a>${!item.read ? `<button type="button" data-read-id="${esc(item.id)}">${t('อ่านแล้ว', 'Mark read')}</button>` : ''}</div></article>`).join('') : `<div class="empty-state"><p>${t('ยังไม่มีการแจ้งเตือน', 'No notifications yet')}</p><a href="#settings">${t('ตั้งค่าการแจ้งเตือน', 'Notification settings')}</a></div>`}<div class="settings-links"><a href="#settings">${t('ตั้งค่าการแจ้งเตือน', 'Notification settings')} →</a></div></section>`, 'notifications');
-    document.querySelector('#mark-all-read')?.addEventListener('click', async event => { const button = event.currentTarget; button.disabled = true; try { await api('settings', { action: 'mark-all-read' }); await notificationsPage(); await refreshNotificationCount(); } catch (error) { button.disabled = false; alert(error.message); } });
-    document.querySelectorAll('[data-read-id]').forEach(button => button.addEventListener('click', async event => { const target = event.currentTarget; target.disabled = true; try { await api('settings', { action: 'mark-read', id: target.dataset.readId }); await notificationsPage(); await refreshNotificationCount(); } catch (error) { target.disabled = false; alert(error.message); } }));
-  } catch (error) { if (location.hash === '#notifications') setView(notice(error.message), 'notifications'); }
+  setView(`${pageHead(t('การแจ้งเตือน', 'Notifications'), t('ประวัติทั้งหมดของบัญชีคุณ', 'Your full notification history'))}<section id="notification-center-page"></section><div class="settings-links"><a href="#settings">${t('ตั้งค่าการแจ้งเตือน', 'Notification settings')} →</a></div>`, 'notifications');
+  await notificationCenter.mountPage(document.querySelector('#notification-center-page'));
 }
 
 function notFound() { setView(`<section class="white-panel empty-state"><h1>ไม่พบหน้านี้</h1><a class="pill-button dark" href="#home">กลับหน้าแรก</a></section>`); }

@@ -1,6 +1,7 @@
 import { applyDisplayPreferences, getDisplayPreferences, saveDisplayPreferences, t, translateCommon } from './settings-ui.js';
 import { inspectZipFile } from './zip-inspect.js';
 import { getAdminNavigation } from './admin-platform.js';
+import { NotificationCenter, notificationBell } from './notification-center.js';
 const adminNavigation = getAdminNavigation(navigator.userAgent);
 const app = document.querySelector('#app');
 let data = { assets: [], orders: [], customers: [], tickets: [], emailConfigured: false };
@@ -11,6 +12,18 @@ let statusFilter = 'ALL';
 let assetQuery = '';
 let assetCategory = 'ALL';
 let assetState = 'ALL';
+const notificationCenter = new NotificationCenter({
+  endpoint: '/api/admin/notifications',
+  authenticated: () => Boolean(document.querySelector('.admin-workspace')),
+  onUnauthorized: () => { renderLogin(); toast(t('เซสชันหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง', 'Session expired. Please sign in again.'), true); },
+  allHref: '#alerts',
+  navigate: (destination, item) => {
+    view = destination === 'all' ? 'alerts' : destination;
+    render();
+    if (item?.type === 'order') showOrder(item.detail);
+    if (item?.type === 'support') document.querySelector(`[data-ticket-status="${CSS.escape(item.detail)}"]`)?.closest('.support-row')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
+});
 
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 const formatDate = value => value ? new Intl.DateTimeFormat(getDisplayPreferences().language === 'en' ? 'en-US' : 'th-TH', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : '—';
@@ -25,7 +38,7 @@ async function api(path, options = {}) {
 }
 const post = input => api('', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) });
 async function settingsApi(input) {
-  const response = await fetch('/api/settings', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) });
+  const response = await fetch('/api/admin/settings', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) });
   const result = await response.json();
   if (!response.ok) throw new Error(result.error || 'ระบบขัดข้อง');
   return result;
@@ -41,6 +54,7 @@ function toast(message, bad = false) {
 }
 
 function renderLogin(configured = true) {
+  notificationCenter.reset();
   app.innerHTML = `<div class="admin-auth-layout"><div class="admin-auth-side">${adminNavigation.brand}<div class="admin-auth-hero"><span class="eyebrow">ADMIN WORKSPACE</span><h1>ระบบผู้ดูแลร้าน</h1><p>จัดการแอสเซ็ต คำสั่งซื้อ และข้อมูลร้านจากพื้นที่เดียว</p></div>${adminNavigation.loginBackLink}</div><div class="admin-auth-main"><form class="login-card" id="login-form"><h2>เข้าสู่ระบบ</h2><p class="muted">กรุณากรอกรหัสผ่านเพื่อเข้าใช้งาน</p><label for="password">รหัสผ่านผู้ดูแล</label><input class="field" id="password" type="password" autocomplete="current-password" required autofocus placeholder="Password"><button class="primary" type="submit">เข้าสู่หลังบ้าน</button><div class="error" id="login-error" role="alert">${configured ? '' : 'ยังไม่ได้ตั้งค่ารหัสผู้ดูแลบนเซิร์ฟเวอร์'}</div></form></div></div>`;
   document.querySelector('#login-form').addEventListener('submit', async event => {
     event.preventDefault();
@@ -915,7 +929,12 @@ function render() {
   });
   document.querySelector('.admin-nav .nav-group').insertAdjacentHTML('beforeend', `<button data-view="alerts" class="${view === 'alerts' ? 'active' : ''}">${t('การแจ้งเตือน', 'Notifications')} <span class="admin-alert-count">${data.orders.filter(item => item.status === 'PENDING').length + (data.tickets || []).filter(item => item.status !== 'RESOLVED').length}</span></button><button data-view="settings" class="${view === 'settings' ? 'active' : ''}">${t('ตั้งค่าร้าน', 'Store settings')}</button>`);
   if (view === 'settings') document.querySelector('.admin-content').innerHTML = settingsPanel();
-  if (view === 'alerts') document.querySelector('.admin-content').innerHTML = alertsPanel();
+  document.querySelector('.content-actions').insertAdjacentHTML('afterbegin', notificationBell());
+  if (view === 'alerts') {
+    document.querySelector('.admin-content').innerHTML = '<section id="notification-center-page"></section>';
+    notificationCenter.mountPage(document.querySelector('#notification-center-page'));
+  }
+  notificationCenter.refresh();
   document.querySelector('#store-settings-form')?.addEventListener('submit', async event => {
     event.preventDefault(); const form = event.currentTarget; const button = form.querySelector('button[type=submit]'); button.disabled = true;
     const faq = [...form.querySelectorAll('.faq-edit-row')].map(row => ({ question: row.querySelector('[name=faq_question]').value.trim(), answer: row.querySelector('[name=faq_answer]').value.trim() })).filter(row => row.question || row.answer);
@@ -964,11 +983,6 @@ function settingsPanel() {
   return `<section class="panel settings-panel"><div class="panel-head"><div><h2>${t('ตั้งค่าร้าน', 'Store settings')}</h2><p>${t('ข้อมูลนี้แสดงในหน้าช่วยเหลือของลูกค้า', 'This information appears in customer help')}</p></div></div><form id="store-settings-form" class="settings-form"><div class="settings-card"><h3>${t('ข้อมูลติดต่อ', 'Contact information')}</h3><label>${t('อีเมลติดต่อ', 'Contact email')}<input class="field" name="contact_email" type="email" maxlength="254" value="${escapeHtml(storeSettings.contact_email)}" placeholder="support@example.com"></label><label>${t('โทรศัพท์', 'Phone')}<input class="field" name="contact_phone" maxlength="40" value="${escapeHtml(storeSettings.contact_phone)}" placeholder="+66 ..."></label><label>${t('เวลาติดต่อ', 'Support hours')}<input class="field" name="support_hours" maxlength="120" value="${escapeHtml(storeSettings.support_hours)}"></label></div><div class="settings-card"><h3>${t('ประกาศจากร้าน', 'Store announcement')}</h3><textarea class="field" name="announcement" maxlength="240" rows="3" placeholder="${t('ข้อความสั้นที่แสดงบนหน้าช่วยเหลือและการแจ้งเตือน', 'Short message shown in Help and notifications')}">${escapeHtml(storeSettings.announcement)}</textarea><p>${t('แก้ข้อความแล้วลูกค้าจะเห็นเป็นการแจ้งเตือนใหม่', 'Changing this message creates a new customer notification.')}</p></div><div class="settings-card"><h3>${t('คำถามที่พบบ่อย', 'Frequently asked questions')}</h3><div id="faq-edit-list">${faq.map((row, index) => `<div class="faq-edit-row"><label>${t('คำถาม', 'Question')} ${index + 1}<input class="field" name="faq_question" maxlength="150" value="${escapeHtml(row.question)}"></label><label>${t('คำตอบ', 'Answer')}<textarea class="field" name="faq_answer" maxlength="500" rows="2">${escapeHtml(row.answer)}</textarea></label><button class="mini danger" type="button" data-remove-faq>${t('ลบ', 'Remove')}</button></div>`).join('')}</div><button class="mini" type="button" id="add-faq">+ ${t('เพิ่มคำถาม', 'Add question')}</button><p>${t('เพิ่มได้สูงสุด 8 ข้อ', 'Up to 8 questions')}</p></div><div id="store-settings-result" aria-live="polite"></div><button class="primary" type="submit">${t('บันทึกการตั้งค่า', 'Save settings')}</button></form></section><section class="panel settings-panel"><div class="panel-head"><div><h2>${t('การแสดงผลหลังบ้าน', 'Admin appearance')}</h2><p>${t('ธีมและภาษาบันทึกในเบราว์เซอร์นี้ ใช้ร่วมกับหน้าร้าน', 'Theme and language are saved in this browser and shared with the storefront')}</p></div></div><div class="settings-form"><div class="settings-card"><label>${t('ธีม', 'Theme')}<select class="field" id="admin-theme"><option value="system" ${display.theme === 'system' ? 'selected' : ''}>${t('ตามอุปกรณ์', 'Use device setting')}</option><option value="light" ${display.theme === 'light' ? 'selected' : ''}>${t('สว่าง', 'Light')}</option><option value="dark" ${display.theme === 'dark' ? 'selected' : ''}>${t('มืด', 'Dark')}</option></select></label><label>${t('ภาษา', 'Language')}<select class="field" id="admin-language"><option value="th" ${display.language === 'th' ? 'selected' : ''}>ไทย</option><option value="en" ${display.language === 'en' ? 'selected' : ''}>English</option></select></label><p>${t('เมนูและข้อมูลสินค้าตัวอย่างมีภาษาอังกฤษ ข้อมูลที่ผู้ใช้กรอกจะแสดงตามภาษาต้นฉบับ', 'Menus and demo product details are available in English. User-entered content stays in its original language.')}</p></div></div></section>`;
 }
 
-function alertsPanel() {
-  const pending = data.orders.filter(item => item.status === 'PENDING');
-  const open = (data.tickets || []).filter(item => item.status !== 'RESOLVED');
-  return `<section class="panel"><div class="panel-head"><div><h2>${t('สิ่งที่ต้องตรวจสอบ', 'Needs attention')}</h2><p>${t('จากคำสั่งซื้อและคำร้องล่าสุดสูงสุดอย่างละ 100 รายการ', 'From the latest 100 orders and support requests')}</p></div></div><div class="report-grid"><article><span>${t('รอชำระ', 'Pending orders')}</span><strong>${pending.length}</strong><button class="mini" data-view="orders">${t('ดูคำสั่งซื้อ', 'View orders')}</button></article><article><span>${t('คำร้องที่ยังเปิด', 'Open requests')}</span><strong>${open.length}</strong><button class="mini" data-view="support">${t('ดูคำร้อง', 'View requests')}</button></article></div>${open.length ? `<h3>${t('คำร้องล่าสุด', 'Recent requests')}</h3>${open.slice(0, 5).map(item => `<p>${escapeHtml(item.id)} · ${escapeHtml(item.email)}</p>`).join('')}` : `<p>${t('ไม่มีคำร้องค้าง', 'No open requests')}</p>`}</section>`;
-}
 
 async function load() {
   const [overview, publicSettings] = await Promise.all([api('?view=overview'), fetch('/api/settings', { cache: 'no-store' }).then(response => response.json()).catch(() => ({ settings: null }))]);

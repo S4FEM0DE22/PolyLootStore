@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import './notifications.css';
 
 export const metadata: Metadata = {
   title: 'PolyLoot — ร้าน 3D Game Assets',
