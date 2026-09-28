@@ -25,3 +25,16 @@ test('both admin rendering paths use platform-aware navigation', () => {
   assert.match(source, /adminNavigation\.backLink/);
   assert.equal((source.match(/adminNavigation\.brand/g) || []).length, 2);
 });
+
+test('admin logo supports both themes without an unconditional CSS override', () => {
+  for (const userAgent of ['', 'PolyLootAdminDesktop/1.0']) {
+    const { brand } = getAdminNavigation(userAgent);
+    assert.match(brand, /class="theme-logo-light" src="\/assets\/brand\/polyloot\.png"/);
+    assert.match(brand, /class="theme-logo-dark" src="\/assets\/brand\/polyloot-dark\.png"/);
+  }
+  const css = readFileSync(new URL('../app/admin/admin.css', import.meta.url), 'utf8');
+  assert.doesNotMatch(css, /theme-logo-(?:light|dark)[^{]*\{[^}]*display\s*:/);
+  const dark = readFileSync(new URL('../app/dark.css', import.meta.url), 'utf8');
+  assert.match(dark, /html\[data-theme='dark'\] \.theme-logo-light\s*\{\s*display:\s*none/);
+  assert.match(dark, /html\[data-theme='dark'\] \.theme-logo-dark\s*\{\s*display:\s*block/);
+});
