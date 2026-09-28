@@ -39,6 +39,10 @@ const base = process.env.POLYLOOT_VERIFY_URL?.replace(/\/$/,'');
         assert.equal(await light.isVisible(),theme==='light',`${mode}/${state}/${width}/${theme}: light logo`);
         assert.equal(await dark.isVisible(),theme==='dark',`${mode}/${state}/${width}/${theme}: dark logo`);
         const visible=theme==='light'?light:dark;
+        await page.waitForFunction(selector=>{
+          const img=document.querySelector(selector);
+          return img?.complete && img.naturalWidth>0;
+        },theme==='light'?'.theme-logo-light':'.theme-logo-dark');
         assert.ok(await visible.evaluate(img=>img.complete && img.naturalWidth>0),'Artwork loaded');
       }
       for(const theme of ['light','dark','light']) {
