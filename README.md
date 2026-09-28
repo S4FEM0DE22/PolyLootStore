@@ -1,5 +1,7 @@
 # PolyLoot — Mini Project 3D Game Assets Store
 
+Android customer APK and Windows admin EXE preparation: see [apps/README.md](apps/README.md).
+
 Created as a separate project using the original shop's account, order, admin, download and email architecture. It now uses Next.js App Router and TypeScript page/route files. The existing storefront and admin interactions run as client-side modules while the API is exposed through Next.js Route Handlers.
 
 ## Local demo

@@ -1,0 +1,49 @@
+{
+  "name": "polyloot-admin-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PolyLoot admin desktop client",
+  "author": "PolyLoot",
+  "main": "main.cjs",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis --x64"
+  },
+  "devDependencies": {
+    "electron": "44.4.5",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "com.polyloot.admin",
+    "productName": "PolyLoot Admin",
+    "asar": true,
+    "files": [
+      "main.cjs",
+      "policy.cjs",
+      "runtime-config.json",
+      "package.json",
+      "icons/admin.png"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "icons/admin.ico",
+      "artifactName": "PolyLoot-Admin-${version}-Setup.${ext}"
+    },
+    "nsis": {
+      "installerIcon": "icons/admin.ico",
+      "uninstallerIcon": "icons/admin.ico",
+      "installerHeaderIcon": "icons/admin.ico",
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    }
+  },
+  "dependencies": {}
+}

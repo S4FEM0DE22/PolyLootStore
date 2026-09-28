@@ -11,3 +11,11 @@ out/
 *.tsbuildinfo
 .npm-cache/
 public/assets/previews/uploads/
+apps/desktop/dist/
+apps/desktop/runtime-config.json
+apps/android/.gradle/
+apps/android/.idea/
+apps/android/**/build/
+apps/android/local.properties
+*.jks
+*.keystore

@@ -10,7 +10,14 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test --test-concurrency=1",
     "seed": "node scripts/seed-local.mjs",
-    "import:kenney": "node scripts/import-kenney.mjs"
+    "import:kenney": "node scripts/import-kenney.mjs",
+    "apps:check": "node scripts/apps.mjs check",
+    "apps:icons": "node scripts/generate-app-icons.cjs",
+    "android:debug": "node scripts/apps.mjs android-debug",
+    "android:release": "node scripts/apps.mjs android-release",
+    "desktop:install": "node scripts/apps.mjs desktop-install",
+    "desktop:dev": "node scripts/apps.mjs desktop-dev",
+    "desktop:build": "node scripts/apps.mjs desktop-build"
   },
   "engines": {
     "node": ">=20.9.0"
