@@ -13,7 +13,8 @@ Do not mark a case passed without executing it on the named artifact/device and 
 | Production invalid-code/demo-token rejection | Passed: live 401 with no session issued |
 | Install/update preserving same-key release data | Passed: emulator-5556 update 1.0.2 → 1.0.3 with install -r, no uninstall/wipe; authenticated-session preservation not yet tested |
 | Real storefront/toolbar absent | Passed on signed 1.0.3 emulator; `.data/live-verification/android-1.0.3-home.png` |
-| Menu → login/menu dismissal | 1.0.2 QA emulator passed; recheck 1.0.3 pending |
+| Menu → login/menu dismissal | Passed on signed 1.0.3 emulator-5556; `.data/live-verification/android-resume-login.png` |
+| App Google button launches system browser | Passed on signed 1.0.3 emulator-5556: Chrome opens accounts.google.com; provider sign-in/return still pending |
 | Google login → consent → return → app session → logout | Pending account-owner interactive Google login |
 | Email/password, signup, recovery | Full native acceptance pending |
 | Search/category/detail, cart and account isolation | Full native acceptance pending |
