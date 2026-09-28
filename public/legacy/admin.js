@@ -3,6 +3,7 @@ import { inspectZipFile } from './zip-inspect.js';
 import { getAdminNavigation } from './admin-platform.js';
 import { NotificationCenter, notificationBell } from './notification-center.js';
 import { applyAdminNavigationIcons } from './navigation-icons.js';
+import { mountAdminAppSettings } from './admin-app-settings.js';
 const adminNavigation = getAdminNavigation(navigator.userAgent);
 const app = document.querySelector('#app');
 let data = { assets: [], orders: [], customers: [], tickets: [], emailConfigured: false };
@@ -57,6 +58,7 @@ function toast(message, bad = false) {
 function renderLogin(configured = true) {
   notificationCenter.reset();
   app.innerHTML = `<div class="admin-auth-layout"><div class="admin-auth-side">${adminNavigation.brand}<div class="admin-auth-hero"><span class="eyebrow">ADMIN WORKSPACE</span><h1>ระบบผู้ดูแลร้าน</h1><p>จัดการแอสเซ็ต คำสั่งซื้อ และข้อมูลร้านจากพื้นที่เดียว</p></div>${adminNavigation.loginBackLink}</div><div class="admin-auth-main"><form class="login-card" id="login-form"><h2>เข้าสู่ระบบ</h2><p class="muted">กรุณากรอกรหัสผ่านเพื่อเข้าใช้งาน</p><label for="password">รหัสผ่านผู้ดูแล</label><input class="field" id="password" type="password" autocomplete="current-password" required autofocus placeholder="Password"><button class="primary" type="submit">เข้าสู่หลังบ้าน</button><div class="error" id="login-error" role="alert">${configured ? '' : 'ยังไม่ได้ตั้งค่ารหัสผู้ดูแลบนเซิร์ฟเวอร์'}</div></form></div></div>`;
+  mountAdminAppSettings(document.querySelector('.admin-auth-main'));
   document.querySelector('#login-form').addEventListener('submit', async event => {
     event.preventDefault();
     const button = event.currentTarget.querySelector('button');

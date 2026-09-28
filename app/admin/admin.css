@@ -265,6 +265,16 @@ h1,h2,h3,.admin-nav button,.admin-nav a,.primary{font-family:Prompt,Inter,system
 .admin-auth-main{background:var(--surface);border:1px solid var(--border);border-radius:32px;align-items:center}
 .login-card{background:#fff;min-height:0;border:1px solid var(--border);border-radius:30px;box-shadow:0 18px 55px #2038200c}
 .login-card h2{color:var(--ink)}
+.admin-auth-main{align-content:center;gap:24px}
+.admin-app-settings{padding:24px 30px}
+.admin-app-settings summary{display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;list-style:none;border-radius:24px;min-height:44px;color:var(--ink)}
+.admin-app-settings summary::-webkit-details-marker{display:none}
+.admin-app-settings summary .menu-icon{width:22px;height:22px;flex:none}
+.admin-app-settings summary::after{content:'+';margin-left:auto;font-size:1.4rem}
+.admin-app-settings[open] summary::after{content:'−'}
+.admin-app-settings label{font-size:1rem;margin:18px 0 8px}
+.admin-app-settings .muted{font-size:.9rem;color:var(--muted);overflow-wrap:anywhere}
+.app-settings-result{font-size:.9rem;margin-top:12px;color:var(--ink)}
 .pill-button.outline{background:#fff;border:1px solid var(--border);color:var(--ink)}
 @media (hover:hover) and (pointer:fine){.pill-button.outline:hover{background:var(--surface);border-color:var(--lime-line);color:var(--ink)}}
 .metric,.asset,.admin-order-row,.customer-row{border:1px solid var(--border);box-shadow:none;border-radius:24px}

@@ -3,6 +3,10 @@ import { translations } from './translations-en.js';
 const key = 'polyloot-display-preferences-v1';
 const defaults = { theme: 'system', language: 'th' };
 const english = {
+  'ตั้งค่าแอป': 'App settings',
+  'ปรับการแสดงผลได้ก่อนเข้าสู่ระบบ บันทึกเฉพาะในเครื่องนี้': 'Change appearance before sign-in. Saved only on this device.',
+  'ข้อมูลร้านและการแจ้งเตือนต้องเข้าสู่ระบบก่อน': 'Sign in to access store settings and notifications.',
+  'บันทึกการตั้งค่าแล้ว': 'Settings saved',
   'หน้าแรก': 'Home', 'สินค้า': 'Products', 'คำสั่งซื้อ': 'Orders', 'คลัง': 'Library',
   'ตะกร้า': 'Cart', 'แคตตาล็อก': 'Catalog', 'ตะกร้าสินค้า': 'Cart',
   'ติดตามคำสั่งซื้อ': 'Track orders', 'บัญชีผู้ใช้': 'Account',
