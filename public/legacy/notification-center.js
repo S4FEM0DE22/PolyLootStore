@@ -41,7 +41,7 @@ export class NotificationCenter {
     document.querySelector('#notification-toggle')?.setAttribute('aria-expanded', 'false');
     if (focus) document.querySelector('#notification-toggle')?.focus();
   }
-  reset() { this.generation++; this.close(); this.items.clear(); this.unreadCount = 0; this.badge(); }
+  reset() { this.generation++; this.pageGeneration++; this.close(); document.querySelector('#notification-dropdown')?.replaceChildren(); this.items.clear(); this.rows = []; this.unreadCount = 0; this.badge(); }
   badge() {
     const badge = document.querySelector('#notification-count');
     if (badge) { badge.hidden = !this.authenticated() || this.unreadCount === 0; badge.textContent = this.unreadCount > 99 ? '99+' : String(this.unreadCount); }

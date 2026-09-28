@@ -11,7 +11,7 @@ const fixture = () => Array.from({ length: 28 }, (_, i) => ({ id: 'fixture-' + i
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
   const results = [];
   try {
-    for (const mode of ['customer-light', 'customer-dark', 'customer-mobile', 'admin-light', 'admin-dark', 'admin-mobile']) {
+    for (const mode of (process.env.POLYLOOT_VERIFY_MODE ? [process.env.POLYLOOT_VERIFY_MODE] : ['customer-light', 'customer-dark', 'customer-mobile', 'admin-light', 'admin-dark', 'admin-mobile'])) {
       const admin = mode.startsWith('admin'), mobile = mode.includes('mobile'), dark = mode.includes('dark');
       const context = await browser.newContext({ viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 } });
       let rows = fixture(), fail = false, expire = false;
@@ -95,6 +95,7 @@ const fixture = () => Array.from({ length: 28 }, (_, i) => ({ id: 'fixture-' + i
       await page.locator('#notification-toggle').click();
       await page.locator(admin ? '#login-form' : '#auth-form').waitFor();
       assert.equal(await page.locator('.nc-page').count(), 0);
+      if (!admin) assert.equal(await page.locator('#notification-dropdown').textContent(), '');
       assert.deepEqual(errors, []);
       results.push({ mode, dropdownDays: 7, allHistory: 28, markRead: true, filters: true, retry: true, markAll: true, keyboard: true, openRelatedPage: true, newUpdate: true, sessionExpiry: true, pageErrors: errors.length });
       await context.close();
