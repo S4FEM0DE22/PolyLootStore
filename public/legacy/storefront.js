@@ -36,6 +36,8 @@ function closeMobileMenu(returnFocus = false) {
   siteHeader.classList.remove('menu-open');
   mobileMenuToggle.setAttribute('aria-expanded', 'false');
   mobileMenuToggle.setAttribute('aria-label', t('เปิดเมนู', 'Open menu'));
+  closeSettingsDropdown();
+  notificationCenter.close();
   if (returnFocus && wasOpen) mobileMenuToggle.focus();
 }
 function closeSettingsDropdown(returnFocus = false) {
@@ -77,6 +79,7 @@ settingsMenuWrap.addEventListener('change', async event => {
 });
 mobileMenuToggle?.addEventListener('click', () => {
   closeSettingsDropdown();
+  notificationCenter.close();
   const open = siteHeader.classList.toggle('menu-open');
   mobileMenuToggle.setAttribute('aria-expanded', String(open));
   mobileMenuToggle.setAttribute('aria-label', open ? t('ปิดเมนู', 'Close menu') : t('เปิดเมนู', 'Open menu'));
@@ -238,8 +241,6 @@ async function api(path, payload) {
 }
 function refreshCartCount() { cartCount.textContent = cart.length; cartCount.hidden = cart.length === 0; cartCount.parentElement.setAttribute('aria-label', `ตะกร้าสินค้า ${cart.length} รายการ`); }
 function setView(html, active = '') {
-  notificationCenter.close();
-  closeSettingsDropdown();
   closeMobileMenu();
   clearActiveFocus();
   clearInterval(carouselInterval);
@@ -1253,6 +1254,8 @@ let lastRoutedHash = null;
 function route(force = false) {
   clearActiveFocus();
   if (!force && location.hash === lastRoutedHash) return;
+  // Close immediately, including routes that await account/settings data.
+  closeMobileMenu();
   lastRoutedHash = location.hash;
   const [section, id] = location.hash.slice(1).split('/');
   if (!section || section === 'home') home();
