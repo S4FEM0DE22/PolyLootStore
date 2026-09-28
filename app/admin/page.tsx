@@ -3,6 +3,7 @@ import Script from 'next/script';
 import '../theme.css';
 import './admin.css';
 import '../dark.css';
+import '../navigation-icons.css';
 
 export const metadata: Metadata = {
   title: 'ผู้ดูแลร้าน · PolyLoot',

@@ -1,0 +1,31 @@
+.site-header .nav-pills > a:not(.nav-cart) {
+  gap: 8px;
+}
+
+.site-header .nav-pills > a .menu-icon,
+.admin-sidebar .admin-nav .menu-icon,
+.admin-topbar .menu-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  color: inherit;
+  pointer-events: none;
+}
+
+.admin-sidebar .admin-nav :is(button, a),
+.admin-topbar [data-action="refresh"] {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-sidebar .admin-nav .admin-alert-count {
+  margin-left: auto;
+}
+
+@media (max-width: 800px) {
+  .site-header .nav-pills > a:not(.nav-cart) {
+    gap: 12px;
+  }
+}

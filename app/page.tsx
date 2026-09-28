@@ -2,6 +2,11 @@ import Script from 'next/script';
 import './theme.css';
 import './store.css';
 import './dark.css';
+import './navigation-icons.css';
+
+function MenuIcon({ name }: { name: 'home' | 'catalog' | 'orders' | 'library' }) {
+  return <svg className="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><use href={`/icons/navigation.svg#${name}`} /></svg>;
+}
 
 export default function StorePage() {
   return <>
@@ -12,10 +17,10 @@ export default function StorePage() {
           <span /><span /><span />
         </button>
         <nav className="nav-pills" id="mobile-nav" aria-label="เมนูหลัก">
-          <a href="#home" data-nav="home">หน้าแรก</a>
-          <a href="#catalog" data-nav="catalog">สินค้า</a>
-          <a href="#track" data-nav="orders">คำสั่งซื้อ</a>
-          <a href="#library" data-nav="library">คลัง</a>
+          <a href="#home" data-nav="home"><MenuIcon name="home" /><span>หน้าแรก</span></a>
+          <a href="#catalog" data-nav="catalog"><MenuIcon name="catalog" /><span>สินค้า</span></a>
+          <a href="#track" data-nav="orders"><MenuIcon name="orders" /><span>คำสั่งซื้อ</span></a>
+          <a href="#library" data-nav="library"><MenuIcon name="library" /><span>คลัง</span></a>
           <a href="#cart" data-nav="cart" className="nav-cart" aria-label="ตะกร้าสินค้า"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 4h2l2.2 10.5a2 2 0 0 0 2 1.5h8.3a2 2 0 0 0 1.9-1.5L21 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg><span className="cart-nav-label">ตะกร้า</span><span id="cart-count" className="cart-count" hidden /></a>
           <div className="nc-wrap" id="notification-wrap"><button type="button" data-nav="notifications" className="nc-bell nav-notifications" id="notification-toggle" aria-expanded="false" aria-controls="notification-dropdown" aria-label="การแจ้งเตือน"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><span className="nav-notifications-label">การแจ้งเตือน</span><span id="notification-count" hidden></span></button><section className="nc-dropdown" id="notification-dropdown" aria-label="การแจ้งเตือนล่าสุด 7 วัน" hidden /></div>
           <div className="settings-menu-wrap" id="settings-menu-wrap">

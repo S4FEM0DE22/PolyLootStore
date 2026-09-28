@@ -2,6 +2,7 @@ import { applyDisplayPreferences, getDisplayPreferences, saveDisplayPreferences,
 import { inspectZipFile } from './zip-inspect.js';
 import { getAdminNavigation } from './admin-platform.js';
 import { NotificationCenter, notificationBell } from './notification-center.js';
+import { applyAdminNavigationIcons } from './navigation-icons.js';
 const adminNavigation = getAdminNavigation(navigator.userAgent);
 const app = document.querySelector('#app');
 let data = { assets: [], orders: [], customers: [], tickets: [], emailConfigured: false };
@@ -950,6 +951,7 @@ function render() {
   document.querySelector('#faq-edit-list')?.addEventListener('click', event => { if (event.target.closest('[data-remove-faq]')) event.target.closest('.faq-edit-row').remove(); });
   document.querySelector('#admin-theme')?.addEventListener('change', event => { saveDisplayPreferences({ theme: event.target.value }); render(); });
   document.querySelector('#admin-language')?.addEventListener('change', event => { saveDisplayPreferences({ language: event.target.value }); render(); });
+  applyAdminNavigationIcons(app);
   translateCommon(document);
   let searchTimeout;
   document.querySelector('#order-search')?.addEventListener('input', event => {
