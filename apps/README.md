@@ -69,6 +69,26 @@ npm run android:release
 
 ไฟล์: `apps/android/app/build/outputs/apk/release/app-release.apk` เพิ่ม `versionCode` และ `versionName` ใน `app/build.gradle` เมื่ออัปเดต และใช้ signing key เดิม รัน Gradle release ตรง ๆ โดยไม่มี keystore อาจได้ APK unsigned แต่คำสั่ง root จะตรวจและป้องกันกรณีนี้
 
+### Release บนเครื่องนี้ (1.0.2)
+
+Gradle daemon ในโปรเจกต์นี้กำหนด JetBrains JDK 25: ตั้ง `JAVA_HOME` ให้ชี้ไปยัง `jbr` ของ Android Studio ที่ใช้งานจริงก่อน build เพื่อไม่ต้องดาวน์โหลด toolchain ใหม่ (เช่นโฟลเดอร์ Android Studio ที่ติดตั้งอยู่ ไม่ใช่ path ของเวอร์ชันเก่าที่ถูกลบแล้ว)
+
+สร้าง signed release ด้วยคีย์ส่วนตัวที่เก็บในเครื่อง:
+
+```powershell
+npm run android:release:local
+```
+
+เฉพาะการสร้างคีย์ release ใหม่ครั้งแรก ใช้ `npm run android:release:local -- --init-signing` ห้ามสร้างคีย์ใหม่แทนคีย์เดิมสำหรับแอปที่เผยแพร่แล้ว สคริปต์จะไม่เขียนทับคีย์หรือรหัสเดิม และตรวจลายเซ็นก่อนส่งออกไฟล์
+
+ไฟล์แจกติดตั้ง: `.data/releases/PolyLoot-Customer-1.0.2.apk` พร้อม `.sha256` เป็น release APK ไม่ใช่ debug ต้องอนุญาตติดตั้งจากแหล่งที่มาของไฟล์บน Android และใช้อินเทอร์เน็ต
+
+**สำรองทั้งโฟลเดอร์ `.data/android-signing/` ไว้ในที่ปลอดภัย**: มี `polyloot-release.p12` และ `credentials.json` สำหรับเซ็นเวอร์ชันถัดไป ไม่ส่งให้ลูกค้า ไม่อัปโหลด Git หรือแนบใน APK การเก็บสำเนาในเครื่องนี้เพียงแห่งเดียวไม่ใช่ backup
+
+หากติดตั้ง debug APK รุ่นเดิมอยู่ จะอัปเดตทับด้วย release ไม่ได้เพราะคีย์ต่างกัน ต้องถอน debug ก่อน (ข้อมูล/session ในแอปจะหาย) ส่วน release ครั้งถัดไปต้องใช้คีย์เดิมและเพิ่ม versionCode
+
+Release นี้ยังมีข้อจำกัดที่ระบุด้านล่าง: Google OAuth/deep link ยังไม่ครบ และการชำระเงินเป็นระบบจำลอง ไม่ใช่หลักฐานว่าผ่าน end-to-end ทุกฟังก์ชันบนมือถือจริง
+
 ลิงก์ดาวน์โหลดที่มี signed token และตัวอย่างฟรีเปิดในเบราว์เซอร์เพื่อบันทึกไฟล์ ไม่มี storage permission หรือ JavaScript/native bridge อัปโหลด avatar ผ่าน system image picker ได้ Email/reset/OAuth links เปิดเว็บในเบราว์เซอร์ การกลับเข้าแอปผ่าน deep link ยังไม่ได้ทำ **Google login จะได้ session ในเบราว์เซอร์ ไม่ได้ส่ง session กลับเข้าแอป ให้ใช้ email/password ในแอปจนกว่าจะทำ OAuth deep link** หน้าแอดมินถูกบล็อกใน WebView ไม่มีแถบปุ่มโหลดใหม่/เปิดเบราว์เซอร์เหนือเว็บแล้วตั้งแต่ Android 1.0.1 แต่ยังมีระบบแจ้งเตือนพร้อมปุ่มลองใหม่เมื่อเชื่อมต่อไม่ได้ ใช้รูป Poly Loot ที่ผู้ใช้ให้เป็นไอคอน launcher พร้อม adaptive icon แล้ว ดูวิธีสร้างไอคอนใหม่ใน `apps/branding/README.md`
 
 ## Checklist ก่อนเผยแพร่ (build ผ่านไม่ได้หมายถึงทดสอบครบ)

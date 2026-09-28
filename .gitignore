@@ -19,3 +19,5 @@ apps/android/**/build/
 apps/android/local.properties
 *.jks
 *.keystore
+*.p12
+*.pfx
