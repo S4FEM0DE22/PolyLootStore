@@ -1,4 +1,5 @@
 import { productDetails } from './product-gallery.js';
+import { createSessionSync } from './session-sync.js';
 import { NotificationCenter } from './notification-center.js';
 import { applyDisplayPreferences, getDisplayPreferences, saveDisplayPreferences, t, translateCommon } from './settings-ui.js';
 
@@ -151,6 +152,7 @@ function clearActiveFocus() {
   }
 }
 function finishAuth() {
+  sessionSync.invalidate();
   notificationCenter.reset();
   const next = safeDestination(authNext);
   rememberDestination('#catalog');
@@ -1009,10 +1011,12 @@ async function orderHistory() {
 }
 
 async function logoutCustomer(button) {
+  sessionSync.invalidate();
   button.disabled = true;
   try {
     if (customerUser) saveCart();
     await api('customer', { action: 'logout' });
+    sessionSync.invalidate();
     customerUser = null;
     cart = [];
     notificationCenter.reset();
@@ -1291,42 +1295,80 @@ app.addEventListener('error', event => {
   img.replaceWith(fallback);
 }, true);
 navAuthAction.addEventListener('click', () => { if (customerUser) { location.hash = '#profile'; profile(); } else { rememberDestination(location.hash || '#home'); location.hash = '#login'; authPage(); } });
-try {
-  const [catalog, session, publicSettings] = await Promise.all([api('assets'), api('customer?view=session'), api('settings').catch(() => ({ settings: null }))]);
-  assets = catalog.assets;
-  customerUser = session.user;
-  storeSettings = publicSettings.settings;
-  if (customerUser) {
-    profileData = { name: customerUser.name || '', firstName: customerUser.firstName || '', lastName: customerUser.lastName || '', email: customerUser.email };
+let bootReady = false;
+const sessionSync = createSessionSync(() => api('customer?view=session'), (user, reason) => {
+  const changed = JSON.stringify(customerUser) !== JSON.stringify(user);
+  const previousEmail = customerUser?.email;
+  customerUser = user;
+  if (changed) {
+    notificationCenter.reset();
+    profileData = user ? { name: user.name || '', firstName: user.firstName || '', lastName: user.lastName || '', email: user.email } : { name: '', firstName: '', lastName: '', email: '' };
     writeSession('safe-profile', profileData);
-    await syncCustomerSettings();
-    cart = readCart(customerUser);
-  } else {
-    cart = readCart(null);
+    if (previousEmail !== user?.email) {
+      currentOrder = null;
+      if (user && !previousEmail) switchCartToUser(user);
+      else cart = readCart(user);
+      selected = new Set(cart);
+      refreshCartCount();
+    }
+    // UI is ready before account preferences/notifications complete.
+    if (user) void syncCustomerSettings();
   }
+  if (reason === 'auth-return') {
+    if (!user) throw new Error(t('ยังไม่พบเซสชัน กรุณาลองตรวจสอบอีกครั้ง', 'Session is not available yet. Please retry.'));
+    delete window.__polylootAuthReturnPending;
+    window.history.replaceState(null, '', '#profile');
+    route(true);
+  } else if (reason === 'bootstrap') {
+    // Account/login screens must not wait for catalog or public settings.
+    if (/^#(?:profile|login|register)$/.test(location.hash)) route(true);
+  } else if (changed && bootReady) {
+    if (user && /^#(?:login|register)$/.test(location.hash)) window.history.replaceState(null, '', safeDestination(authNext));
+    route(true);
+  }
+});
+window.polylootAuthReturn = () => {
+  closeMobileMenu();
+  const message = document.querySelector('#live-message');
+  if (message) message.textContent = t('กำลังยืนยันบัญชี…', 'Verifying your account…');
+  return sessionSync.refresh('auth-return').catch(error => {
+    const panel = document.querySelector('#live-message') || app;
+    panel.innerHTML = `${notice(error.message)}<button class="pill-button dark" id="session-refresh-retry" type="button">${t('ลองตรวจสอบบัญชีอีกครั้ง', 'Retry account check')}</button>`;
+    document.querySelector('#session-refresh-retry')?.addEventListener('click', window.polylootAuthReturn);
+  });
+};
+const refreshOnResume = () => {
+  if (window.__polylootAuthReturnPending) void window.polylootAuthReturn();
+  else void sessionSync.refresh('resume').catch(() => {});
+};
+window.addEventListener('polyloot:resume', refreshOnResume);
+window.addEventListener('hashchange', () => { if (bootReady) route(); });
+window.addEventListener('popstate', () => { if (bootReady) route(); });
+window.addEventListener('pageshow', event => { clearActiveFocus(); if (event.persisted) refreshOnResume(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  clearActiveFocus();
+  refreshOnResume();
+  if (bootReady && (!location.hash || location.hash === '#home')) {
+    api('assets').then(catalog => {
+      if (Array.isArray(catalog?.assets) && catalog.assets.map(a => a.id).join(',') !== assets.map(a => a.id).join(',')) {
+        assets = catalog.assets;
+        if (!location.hash || location.hash === '#home') home();
+      }
+    }).catch(() => {});
+  }
+});
+try {
+  const [catalog] = await Promise.all([
+    api('assets'),
+    window.__polylootAuthReturnPending ? window.polylootAuthReturn() : sessionSync.refresh('bootstrap')
+  ]);
+  assets = catalog.assets;
   cart = cart.filter(id => asset(id));
   selected = new Set(cart);
   refreshCartCount();
-  window.addEventListener('hashchange', () => route());
-  window.addEventListener('popstate', () => route());
-  window.addEventListener('pageshow', event => { clearActiveFocus(); if (event.persisted) route(true); });
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
-      clearActiveFocus();
-      if (!location.hash || location.hash === '#home') {
-        api('assets').then(catalog => {
-          if (Array.isArray(catalog?.assets)) {
-            const newIds = catalog.assets.map(a => a.id).join(',');
-            const oldIds = assets.map(a => a.id).join(',');
-            if (newIds !== oldIds) {
-              assets = catalog.assets;
-              home();
-            }
-          }
-        }).catch(() => {});
-      }
-    }
-  });
+  bootReady = true;
+  void api('settings').then(result => { storeSettings = result.settings; }).catch(() => {});
   if (/^#(access_token|error=|error_code=)/.test(location.hash)) {
     const params = new URLSearchParams(location.hash.slice(1));
     const failed = params.has('error');
@@ -1370,7 +1412,7 @@ try {
     resetToken = new URLSearchParams(location.hash.split('?')[1]).get('token') || '';
     window.history.replaceState(null, '', '#reset-password');
     resetPage();
-  } else route(true);
+  } else if (!(/^#(?:profile|login|register)$/.test(location.hash) && lastRoutedHash === location.hash)) route(true);
 }
 catch (error) { app.innerHTML = `<section class="white-panel empty-state">${notice(error.message)}</section>`; }
 

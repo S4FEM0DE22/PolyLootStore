@@ -202,7 +202,7 @@ public class MainActivity extends Activity {
                     oauthBusy = false;
                     if (!accepted) { oauthFailed(); return; }
                     CookieManager.getInstance().flush();
-                    web.loadUrl(BuildConfig.SITE_URL + "/#profile");
+                    refreshAuthenticatedPage();
                 });
             });
         } catch (Exception error) {
@@ -212,6 +212,20 @@ public class MainActivity extends Activity {
     private void oauthFailed() {
         Toast.makeText(this, "เข้าสู่ระบบ Google ไม่สำเร็จ กรุณาเปิดหน้าเข้าสู่ระบบแล้วลองใหม่", Toast.LENGTH_LONG).show();
         web.loadUrl(BuildConfig.SITE_URL + "/#login");
+    }
+    private void refreshAuthenticatedPage() {
+        if (isFinishing() || isDestroyed()) return;
+        if (web.getUrl() == null || !sameOrigin(Uri.parse(web.getUrl()))) { reloadAuthenticatedPage(); return; }
+        // No identity/token injection: the page must re-read the verified
+        // HttpOnly cookie from /api/customer before rendering the account.
+        web.evaluateJavascript("(() => { window.__polylootAuthReturnPending = true; if (typeof window.polylootAuthReturn === 'function') { window.polylootAuthReturn(); return true; } return false; })()", handled -> {
+            if (!isFinishing() && !isDestroyed() && !"true".equals(handled)) reloadAuthenticatedPage();
+        });
+    }
+    private void reloadAuthenticatedPage() {
+        // A fragment-only loadUrl is same-document navigation and retains the
+        // old guest JS state. A distinct query forces a real load for old pages.
+        web.loadUrl(BuildConfig.SITE_URL + "/?auth_return=" + System.currentTimeMillis() + "#profile");
     }
     private void openBrowser(Uri uri) {
         if (!"https".equals(uri.getScheme()) || uri.getUserInfo() != null) return;
@@ -238,6 +252,14 @@ public class MainActivity extends Activity {
     }
     @Override protected void onSaveInstanceState(Bundle state) { web.saveState(state); super.onSaveInstanceState(state); }
     @Override protected void onPause() { web.onPause(); CookieManager.getInstance().flush(); super.onPause(); }
-    @Override protected void onResume() { super.onResume(); if (web != null) web.onResume(); }
+    @Override protected void onResume() {
+        super.onResume();
+        if (web != null) {
+            web.onResume();
+            if (!oauthBusy && web.getUrl() != null && sameOrigin(Uri.parse(web.getUrl()))) {
+                web.evaluateJavascript("window.dispatchEvent(new Event('polyloot:resume'))", null);
+            }
+        }
+    }
     @Override protected void onDestroy() { if (fileCallback != null) fileCallback.onReceiveValue(null); web.destroy(); super.onDestroy(); }
 }

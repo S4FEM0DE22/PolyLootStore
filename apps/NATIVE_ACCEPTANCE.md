@@ -1,8 +1,8 @@
 # Native acceptance — 2026-09-28
 
-Do not mark a case passed without executing it on the named artifact/device and recording evidence. No physical Android device is currently available. Do not uninstall an existing debug build or clear customer data to install a differently signed release.
+Do not mark a case passed without executing it on the named artifact/device and recording evidence. The user reports phone login works but 1.0.3 required reopening the app; that is owner-reported, not agent-observed evidence. Do not uninstall an existing debug build or clear customer data to install a differently signed release.
 
-## Android 1.0.3 signed release
+## Android 1.0.4 signed release (historical smoke evidence explicitly labeled)
 
 | Case | Current evidence / status |
 |---|---|
@@ -11,11 +11,12 @@ Do not mark a case passed without executing it on the named artifact/device and 
 | Server code exchange, private cookie, session reload | Passed with mocked Supabase, not a live provider session |
 | Deployed OAuth routes and live Supabase Google startup | Passed: public integration check; opaque provider state means actual redirect still awaits account-owner login |
 | Production invalid-code/demo-token rejection | Passed: live 401 with no session issued |
-| Install/update preserving same-key release data | Passed: emulator-5556 update 1.0.2 → 1.0.3 with install -r, no uninstall/wipe; authenticated-session preservation not yet tested |
-| Real storefront/toolbar absent | Passed on signed 1.0.3 emulator; `.data/live-verification/android-1.0.3-home.png` |
+| Install/update preserving same-key release data | Passed: emulator-5556 update 1.0.3 → 1.0.4 with install -r, no uninstall/wipe; authenticated-session preservation not yet tested |
+| Real storefront/toolbar absent | Passed on signed 1.0.4 emulator; `.data/live-verification/android-1.0.4-home.png` |
 | Menu → login/menu dismissal | Passed on signed 1.0.3 emulator-5556; `.data/live-verification/android-resume-login.png` |
 | App Google button launches system browser | Passed on signed 1.0.3 emulator-5556: Chrome opens accounts.google.com; provider sign-in/return still pending |
-| Google login → consent → return → app session → logout | Pending account-owner interactive Google login |
+| Google login → consent → return → app session → logout | Owner reports phone login succeeds on previous build with restart defect; complete agent-observed run and owner 1.0.4 retest pending |
+| Immediate session UI and stale-response protection | Passed: four unit regressions and five Edge actual-storefront cases with API fixtures; native provider return still needs owner retest |
 | Email/password, signup, recovery | Full native acceptance pending |
 | Search/category/detail, cart and account isolation | Full native acceptance pending |
 | Simulated payment → history/library → private download | Full native acceptance pending; no real charges |
@@ -23,7 +24,7 @@ Do not mark a case passed without executing it on the named artifact/device and 
 | Expected receipt/delivery/support/recovery emails | Pending current native workflow and provider delivery evidence |
 | Avatar system picker/upload | Full native acceptance pending |
 | Back, keyboard, rotation/recreation, offline/retry | Full native acceptance pending |
-| All functions on physical phone | Blocked: no physical phone available |
+| All functions on physical phone | Pending: no agent-observed complete device run; owner 1.0.4 retest required |
 
 ## Windows admin EXE
 
