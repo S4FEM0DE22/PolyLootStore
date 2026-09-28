@@ -18,6 +18,7 @@ import {
 import { downloadUrl } from '../lib/delivery.js';
 import { body, cleanEmail, fail, json, orderView, validateEmail } from '../lib/http.js';
 import { listCustomerOrders, listAllAssets, uploadCoverFile } from '../lib/store.js';
+import { exchangeAndroidGoogleCode } from '../lib/android-oauth.js';
 
 function reply(data, status = 200, cookie) {
   const headers = { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' };
@@ -66,6 +67,10 @@ export default { async fetch(request) {
       const accessToken = typeof input.accessToken === 'string' ? input.accessToken.trim() : '';
       if (!accessToken) return json({ error: 'ไม่พบ Access Token' }, 400);
       const user = await verifyGoogleToken(accessToken);
+      return reply({ user: publicUser(user) }, 200, sessionCookie(request, user));
+    }
+    if (input.action === 'android-google-session') {
+      const user = await exchangeAndroidGoogleCode(input.code, input.verifier);
       return reply({ user: publicUser(user) }, 200, sessionCookie(request, user));
     }
     if (input.action === 'update-avatar') {

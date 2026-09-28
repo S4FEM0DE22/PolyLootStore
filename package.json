@@ -18,7 +18,8 @@
     "android:release:local": "node scripts/android-release-local.mjs",
     "desktop:install": "node scripts/apps.mjs desktop-install",
     "desktop:dev": "node scripts/apps.mjs desktop-dev",
-    "desktop:build": "node scripts/apps.mjs desktop-build"
+    "desktop:build": "node scripts/apps.mjs desktop-build",
+    "desktop:release": "node scripts/desktop-release.mjs"
   },
   "engines": {
     "node": ">=20.9.0"

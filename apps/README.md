@@ -81,15 +81,44 @@ npm run android:release:local
 
 เฉพาะการสร้างคีย์ release ใหม่ครั้งแรก ใช้ `npm run android:release:local -- --init-signing` ห้ามสร้างคีย์ใหม่แทนคีย์เดิมสำหรับแอปที่เผยแพร่แล้ว สคริปต์จะไม่เขียนทับคีย์หรือรหัสเดิม และตรวจลายเซ็นก่อนส่งออกไฟล์
 
-ไฟล์แจกติดตั้ง: `.data/releases/PolyLoot-Customer-1.0.2.apk` พร้อม `.sha256` เป็น release APK ไม่ใช่ debug ต้องอนุญาตติดตั้งจากแหล่งที่มาของไฟล์บน Android และใช้อินเทอร์เน็ต
+ไฟล์แจกติดตั้ง: `.data/releases/PolyLoot-Customer-1.0.3.apk` พร้อม `.sha256` เป็น release APK ไม่ใช่ debug ต้องอนุญาตติดตั้งจากแหล่งที่มาของไฟล์บน Android และใช้อินเทอร์เน็ต
 
 **สำรองทั้งโฟลเดอร์ `.data/android-signing/` ไว้ในที่ปลอดภัย**: มี `polyloot-release.p12` และ `credentials.json` สำหรับเซ็นเวอร์ชันถัดไป ไม่ส่งให้ลูกค้า ไม่อัปโหลด Git หรือแนบใน APK การเก็บสำเนาในเครื่องนี้เพียงแห่งเดียวไม่ใช่ backup
 
 หากติดตั้ง debug APK รุ่นเดิมอยู่ จะอัปเดตทับด้วย release ไม่ได้เพราะคีย์ต่างกัน ต้องถอน debug ก่อน (ข้อมูล/session ในแอปจะหาย) ส่วน release ครั้งถัดไปต้องใช้คีย์เดิมและเพิ่ม versionCode
 
-Release นี้ยังมีข้อจำกัดที่ระบุด้านล่าง: Google OAuth/deep link ยังไม่ครบ และการชำระเงินเป็นระบบจำลอง ไม่ใช่หลักฐานว่าผ่าน end-to-end ทุกฟังก์ชันบนมือถือจริง
+Android 1.0.3 เพิ่ม Google OAuth return flow ตามหัวข้อด้านล่าง การชำระเงินยังเป็นระบบจำลอง ไม่ใช่หลักฐานว่าผ่าน end-to-end ทุกฟังก์ชันบนมือถือจริง
 
-ลิงก์ดาวน์โหลดที่มี signed token และตัวอย่างฟรีเปิดในเบราว์เซอร์เพื่อบันทึกไฟล์ ไม่มี storage permission หรือ JavaScript/native bridge อัปโหลด avatar ผ่าน system image picker ได้ Email/reset/OAuth links เปิดเว็บในเบราว์เซอร์ การกลับเข้าแอปผ่าน deep link ยังไม่ได้ทำ **Google login จะได้ session ในเบราว์เซอร์ ไม่ได้ส่ง session กลับเข้าแอป ให้ใช้ email/password ในแอปจนกว่าจะทำ OAuth deep link** หน้าแอดมินถูกบล็อกใน WebView ไม่มีแถบปุ่มโหลดใหม่/เปิดเบราว์เซอร์เหนือเว็บแล้วตั้งแต่ Android 1.0.1 แต่ยังมีระบบแจ้งเตือนพร้อมปุ่มลองใหม่เมื่อเชื่อมต่อไม่ได้ ใช้รูป Poly Loot ที่ผู้ใช้ให้เป็นไอคอน launcher พร้อม adaptive icon แล้ว ดูวิธีสร้างไอคอนใหม่ใน `apps/branding/README.md`
+ลิงก์ดาวน์โหลดที่มี signed token และตัวอย่างฟรีเปิดในเบราว์เซอร์เพื่อบันทึกไฟล์ ไม่มี storage permission หรือ JavaScript/native bridge อัปโหลด avatar ผ่าน system image picker ได้ Email/reset links ยังเปิดเว็บในเบราว์เซอร์ ไม่ใช่ Android password-reset deep links หน้าแอดมินถูกบล็อกใน WebView ไม่มีแถบปุ่มโหลดใหม่/เปิดเบราว์เซอร์เหนือเว็บแล้วตั้งแต่ Android 1.0.1 แต่ยังมีระบบแจ้งเตือนพร้อมปุ่มลองใหม่เมื่อเชื่อมต่อไม่ได้ ใช้รูป Poly Loot ที่ผู้ใช้ให้เป็นไอคอน launcher พร้อม adaptive icon แล้ว ดูวิธีสร้างไอคอนใหม่ใน `apps/branding/README.md`
+
+## Google OAuth บน Android 1.0.3
+
+1. ปุ่ม Google ใน APK เปิด system browser ไม่ใช้ embedded WebView สำหรับล็อกอิน Google
+2. แอปสร้าง PKCE verifier/state แบบสุ่ม เก็บใน app-private preferences ที่ไม่รวม backup หมดอายุ 5 นาที verifier ไม่อยู่ใน URL
+3. `/auth/android/start` ส่ง S256 challenge ไป Supabase และ redirect กลับ HTTPS `/auth/android/callback?state=...`
+4. ผู้ใช้กด **กลับเข้าแอป PolyLoot** เพื่อเปิด `com.polyloot.customer://oauth/callback` ด้วยรหัสใช้ครั้งเดียว ไม่ใช่ access/refresh token
+5. แอปตรวจ scheme/host/path/state/อายุคำขอ และ consume pending request ก่อนแลกรหัสผ่าน HTTPS `/api/customer` เซิร์ฟเวอร์ตรวจบัญชีกับ Supabase แล้วส่ง HttpOnly session cookie กลับ WebView
+
+ต้อง deploy เว็บที่มีสอง route นี้ก่อนใช้ APK ใหม่ ตั้ง Supabase **Site URL** เป็น `https://poly-loot-store.vercel.app` และตรวจว่า redirect กลับ `https://poly-loot-store.vercel.app/auth/android/callback?state=...` ได้ หาก Site URL ต่างจากนี้ ให้เพิ่มเฉพาะ callback ของร้านใน Redirect URLs โดยรักษา state query ไม่ใช้ wildcard ทุกโดเมน ไม่ต้องอนุญาต custom scheme ใน Supabase เพราะ Supabase redirect กลับ HTTPS ก่อน
+
+การทดสอบ mock/JVM ไม่ใช่การยืนยัน Google provider end-to-end ต้องให้เจ้าของบัญชีล็อกอินและยืนยัน consent จริงก่อนทำเครื่องหมายผ่าน ดู `BUILD_VERIFICATION.md` และ `NATIVE_ACCEPTANCE.md` บัญชีเดโมถูกปฏิเสธใน production
+
+## Windows release ที่ต้องมีลายเซ็น
+
+`npm run desktop:build` เป็น build สำหรับทดสอบ และอาจ unsigned **ห้ามเรียกว่า signed public release** ส่วนคำสั่งสำหรับแจกจ่ายแบบเซ็นใช้:
+
+```powershell
+# ตั้งผ่าน environment/CI secrets ไม่บันทึกรหัสผ่านลงไฟล์หรือ Git
+# POLYLOOT_WINDOWS_PUBLISHER = ชื่อ publisher ตรงกับ CN ของใบรับรอง
+# POLYLOOT_WINDOWS_CERT_SHA1 = thumbprint ของ CA-issued cert ใน Windows store/HSM
+# หรือใช้ CSC_LINK/WIN_CSC_LINK และ CSC_KEY_PASSWORD/WIN_CSC_KEY_PASSWORD
+npm run desktop:release -- --check
+npm run desktop:release
+```
+
+คำสั่งนี้ต้องมีใบรับรองก่อนจึงเริ่ม build เปิด `forceCodeSigning` และ SHA-256/RFC3161 timestamp ใช้ `apps/desktop/dist-signed/` แยกจาก build ทดสอบ ตรวจ Authenticode ของ installer และ app EXE ว่า Windows เชื่อถือ มี timestamp และ publisher ตรงกันก่อนคัดลอกไป `.data/releases/` พร้อม checksum ใบรับรอง self-signed ไม่ถือเป็น public-release signing
+
+ณ 2026-09-28 ผู้ใช้ยืนยันว่า **ยังไม่มีใบรับรอง/บัญชีเซ็น** จึงยังสร้าง EXE ที่มี trusted signature ไม่ได้ ไม่มีการซื้อใบรับรองหรือปิด SmartScreen การเซ็นด้วย CA แม้สำเร็จแล้วก็ไม่รับประกันว่าแอปใหม่จะไม่มี SmartScreen warning เพราะยังขึ้นกับ reputation อ่าน [Microsoft SmartScreen](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation) และ [code-signing options](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/code-signing-options) ก่อนเลือกบริการ รวมถึงข้อจำกัดภูมิภาคของ Artifact Signing
 
 ## Checklist ก่อนเผยแพร่ (build ผ่านไม่ได้หมายถึงทดสอบครบ)
 

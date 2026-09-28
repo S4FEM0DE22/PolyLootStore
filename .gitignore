@@ -12,6 +12,7 @@ out/
 .npm-cache/
 public/assets/previews/uploads/
 apps/desktop/dist/
+apps/desktop/dist-signed/
 apps/desktop/runtime-config.json
 apps/android/.gradle/
 apps/android/.idea/

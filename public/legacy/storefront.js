@@ -766,6 +766,11 @@ function authPage(mode = 'login', message = '') {
     const btn = document.querySelector('#google-auth-btn');
     btn.disabled = true;
     try {
+      if (/\bPolyLootCustomerAndroid\//.test(navigator.userAgent)) {
+        window.location.href = '/auth/android/start';
+        btn.disabled = false;
+        return;
+      }
       const res = await api('customer', { action: 'google-auth-url' });
       if (res.url) window.location.href = res.url;
     } catch (err) {
