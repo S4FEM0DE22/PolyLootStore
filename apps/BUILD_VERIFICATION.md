@@ -26,6 +26,8 @@ Current artifacts, not the historical 1.0.1 debug build. Build success, mock tes
 
 Mocked server exchange and actual JVM policy tests passed. **Google provider login/consent and authenticated return in the signed APK are not yet confirmed end-to-end.** Account-owner sign-in is required. The deployed website must contain the callback; Supabase must allow the HTTPS callback through matching Site URL or explicit Redirect URLs. APK build success does not close this acceptance item.
 
+Production integration check passed on 2026-09-28 against deployment `dpl_HeW8xeS5aHU9UZzKMfMAkAPEBZ1U` (commit `156a9df`, READY): the deployed start route uses S256, live Supabase starts Google authorization, the callback returns a safe app link with no-store/no-referrer, malformed requests fail, and fabricated codes/demo tokens return 401 with no session cookie. Supabase currently uses opaque provider state; successful authorization startup alone does not prove callback allowlisting or signed-in return. Run `node scripts/verify-android-oauth-live.mjs`; its report deliberately excludes verifier, provider state, codes, tokens and cookies.
+
 ## Native verification boundaries
 
 - Historical 1.0.2 signed APK QA emulator smoke test passed: install/launch, real storefront, menu to login/menu dismissal and removed toolbar absent. Existing debug app/emulator data was not cleared.

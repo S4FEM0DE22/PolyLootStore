@@ -9,6 +9,8 @@ Do not mark a case passed without executing it on the named artifact/device and 
 | Build and original release signature | Passed: assembleRelease and apksigner |
 | Native state, S256, expiry and strict deep-link URI | Passed: JVM executes actual OAuthRequest policy, not provider login |
 | Server code exchange, private cookie, session reload | Passed with mocked Supabase, not a live provider session |
+| Deployed OAuth routes and live Supabase Google startup | Passed: public integration check; opaque provider state means actual redirect still awaits account-owner login |
+| Production invalid-code/demo-token rejection | Passed: live 401 with no session issued |
 | Install/update preserving same-key release data | Passed: emulator-5556 update 1.0.2 → 1.0.3 with install -r, no uninstall/wipe; authenticated-session preservation not yet tested |
 | Real storefront/toolbar absent | Passed on signed 1.0.3 emulator; `.data/live-verification/android-1.0.3-home.png` |
 | Menu → login/menu dismissal | 1.0.2 QA emulator passed; recheck 1.0.3 pending |
