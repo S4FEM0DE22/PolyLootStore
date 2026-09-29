@@ -4,6 +4,7 @@ import '../theme.css';
 import './admin.css';
 import '../dark.css';
 import '../navigation-icons.css';
+import '../support-thread.css';
 
 export const metadata: Metadata = {
   title: 'ผู้ดูแลร้าน · PolyLoot',

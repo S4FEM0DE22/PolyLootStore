@@ -4,6 +4,7 @@ import { getAdminNavigation } from './admin-platform.js';
 import { NotificationCenter, notificationBell } from './notification-center.js';
 import { applyAdminNavigationIcons } from './navigation-icons.js';
 import { mountAdminAppSettings } from './admin-app-settings.js';
+import { mountSupportThread } from './support-thread.js';
 const adminNavigation = getAdminNavigation(navigator.userAgent);
 const app = document.querySelector('#app');
 let data = { assets: [], orders: [], customers: [], tickets: [], emailConfigured: false };
@@ -23,7 +24,7 @@ const notificationCenter = new NotificationCenter({
     view = destination === 'all' ? 'alerts' : destination;
     render();
     if (item?.type === 'order') showOrder(item.detail);
-    if (item?.type === 'support') document.querySelector(`[data-ticket-status="${CSS.escape(item.detail)}"]`)?.closest('.support-row')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    if (item?.type === 'support') showSupportThread(item.detail);
   }
 });
 
@@ -102,7 +103,12 @@ function reportPanel() {
 
 function supportPanel() {
   const labels = { DOWNLOAD: 'ดาวน์โหลด', ORDER: 'คำสั่งซื้อ', PRODUCT: 'สินค้า', ACCOUNT: 'บัญชี', OTHER: 'อื่น ๆ' };
-  return `<section class="panel"><div class="panel-head"><div><h2>คำร้องขอความช่วยเหลือ</h2><p>ลูกค้าส่งจากหน้าช่วยเหลือ · แสดงล่าสุดสูงสุด 100 รายการ</p></div></div>${(data.tickets || []).length ? `<div class="support-list">${data.tickets.map(ticket => `<article class="support-row"><div><strong>${escapeHtml(ticket.id)} · ${labels[ticket.category] || 'อื่น ๆ'}</strong><p>${escapeHtml(ticket.email)} · ${formatDate(ticket.createdAt)}</p>${ticket.orderId ? `<p>คำสั่งซื้อ ${escapeHtml(ticket.orderId)}</p>` : ''}<p class="support-message">${escapeHtml(ticket.message)}</p></div><label>สถานะ<select class="field" data-ticket-status="${escapeHtml(ticket.id)}"><option value="OPEN" ${ticket.status === 'OPEN' ? 'selected' : ''}>รับเรื่องแล้ว</option><option value="IN_PROGRESS" ${ticket.status === 'IN_PROGRESS' ? 'selected' : ''}>กำลังตรวจสอบ</option><option value="RESOLVED" ${ticket.status === 'RESOLVED' ? 'selected' : ''}>ดำเนินการแล้ว</option></select></label></article>`).join('')}</div>` : '<div class="empty">ยังไม่มีคำร้อง</div>'}</section>`;
+  return `<section class="panel"><div class="panel-head"><div><h2>คำร้องขอความช่วยเหลือ</h2><p>ลูกค้าส่งจากหน้าช่วยเหลือ · แสดงล่าสุดสูงสุด 100 รายการ</p></div></div>${(data.tickets || []).length ? `<div class="support-list">${data.tickets.map(ticket => `<article class="support-row"><div><strong>${escapeHtml(ticket.id)} · ${labels[ticket.category] || 'อื่น ๆ'}</strong><p>${escapeHtml(ticket.email)} · ${formatDate(ticket.createdAt)}</p>${ticket.orderId ? `<p>คำสั่งซื้อ ${escapeHtml(ticket.orderId)}</p>` : ''}<p class="support-message">${escapeHtml(ticket.message)}</p></div><div><button class="mini" type="button" data-open-ticket="${escapeHtml(ticket.id)}">${t('ดูและตอบกลับ', 'View conversation')}</button><label>สถานะ<select class="field" data-ticket-status="${escapeHtml(ticket.id)}"><option value="OPEN" ${ticket.status === 'OPEN' ? 'selected' : ''}>รับเรื่องแล้ว</option><option value="IN_PROGRESS" ${ticket.status === 'IN_PROGRESS' ? 'selected' : ''}>กำลังตรวจสอบ</option><option value="RESOLVED" ${ticket.status === 'RESOLVED' ? 'selected' : ''}>ดำเนินการแล้ว</option></select></label></div></article>`).join('')}</div>` : '<div class="empty">ยังไม่มีคำร้อง</div>'}</section>`;
+}
+
+function showSupportThread(id) {
+  showDialog(`<div class="dialog-head"><h2>${t('รายละเอียดคำร้อง', 'Support conversation')}</h2><button type="button" data-close-dialog aria-label="${t('ปิด', 'Close')}">×</button></div><div id="admin-support-thread"></div>`);
+  void mountSupportThread(document.querySelector('#admin-support-thread'), { id, admin: true, onUpdate: () => notificationCenter.refresh() });
 }
 
 function assetsPanel() {
@@ -954,6 +960,7 @@ function render() {
   document.querySelector('#admin-theme')?.addEventListener('change', event => { saveDisplayPreferences({ theme: event.target.value }); render(); });
   document.querySelector('#admin-language')?.addEventListener('change', event => { saveDisplayPreferences({ language: event.target.value }); render(); });
   applyAdminNavigationIcons(app);
+  document.querySelectorAll('[data-open-ticket]').forEach(button => button.addEventListener('click', () => showSupportThread(button.dataset.openTicket)));
   translateCommon(document);
   let searchTimeout;
   document.querySelector('#order-search')?.addEventListener('input', event => {

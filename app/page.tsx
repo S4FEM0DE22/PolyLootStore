@@ -3,6 +3,7 @@ import './theme.css';
 import './store.css';
 import './dark.css';
 import './navigation-icons.css';
+import './support-thread.css';
 
 function MenuIcon({ name }: { name: 'home' | 'catalog' | 'orders' | 'library' }) {
   return <svg className="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><use href={`/icons/navigation.svg#${name}`} /></svg>;

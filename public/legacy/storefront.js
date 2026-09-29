@@ -1,5 +1,6 @@
 import { productDetails } from './product-gallery.js';
 import { createSessionSync } from './session-sync.js';
+import { mountSupportThread } from './support-thread.js';
 import { NotificationCenter } from './notification-center.js';
 import { applyDisplayPreferences, getDisplayPreferences, saveDisplayPreferences, t, translateCommon } from './settings-ui.js';
 
@@ -143,7 +144,7 @@ function switchCartToUser(user) {
   refreshCartCount();
 }
 function safeDestination(value) {
-  return typeof value === 'string' && /^#(?:home|catalog|asset\/[a-z0-9-]+|cart|checkout(?:\/[a-z0-9-]+)?|order\/GA-[A-F0-9]{24}|track|history|profile|library|settings|notifications|help)$/.test(value) ? value : '#catalog';
+  return typeof value === 'string' && /^#(?:home|catalog|asset\/[a-z0-9-]+|ticket\/SP-[A-F0-9]{16}|cart|checkout(?:\/[a-z0-9-]+)?|order\/GA-[A-F0-9]{24}|track|history|profile|library|settings|notifications|help)$/.test(value) ? value : '#catalog';
 }
 function rememberDestination(value) { authNext = safeDestination(value); writeSession('safe-auth-next', authNext); }
 function clearActiveFocus() {
@@ -1204,7 +1205,7 @@ async function helpPage() {
     try {
       const result = await api('support');
       const states = { OPEN: 'รับเรื่องแล้ว', IN_PROGRESS: 'กำลังตรวจสอบ', RESOLVED: 'ดำเนินการแล้ว' };
-      panel.innerHTML = `<h3>คำร้องของฉัน</h3>${result.tickets.length ? result.tickets.map(ticket => `<article class="ticket-row"><strong>${esc(ticket.id)}</strong><span>${states[ticket.status] || esc(ticket.status)}</span><p>${esc(ticket.message)}</p>${ticket.orderId ? `<small>คำสั่งซื้อ ${esc(ticket.orderId)}</small>` : ''}</article>`).join('') : '<p>ยังไม่มีคำร้อง</p>'}`;
+      panel.innerHTML = `<h3>คำร้องของฉัน</h3>${result.tickets.length ? result.tickets.map(ticket => `<article class="ticket-row"><a class="pill-button outline" href="#ticket/${esc(ticket.id)}">${esc(ticket.id)} · ${t('ดูและตอบกลับ', 'View conversation')}</a><span>${states[ticket.status] || esc(ticket.status)}</span><p>${esc(ticket.message)}</p>${ticket.orderId ? `<small>คำสั่งซื้อ ${esc(ticket.orderId)}</small>` : ''}</article>`).join('') : '<p>ยังไม่มีคำร้อง</p>'}`;
     } catch (error) { panel.innerHTML = notice(error.message); }
   };
   document.querySelector('#support-form').addEventListener('submit', async event => {
@@ -1272,6 +1273,11 @@ function route(force = false) {
   else if (section === 'asset') detail(id);
   else if (section === 'library') libraryPage();
   else if (section === 'help') helpPage();
+  else if (section === 'ticket') {
+    if (!customerUser) return requireLogin(`#ticket/${id}`);
+    setView(`${pageHead('รายละเอียดคำร้อง', 'สนทนากับผู้ดูแลร้าน')}<a class="pill-button outline" href="#help">${t('คำร้องของฉัน', 'My requests')}</a><section class="white-panel" id="support-thread"></section>`, 'help');
+    void mountSupportThread(document.querySelector('#support-thread'), { id, onUpdate: () => notificationCenter.refresh() });
+  }
   else if (section === 'cart') cartPage();
   else if (section === 'checkout') checkout(id);
   else if (section === 'order') orderPage(id);

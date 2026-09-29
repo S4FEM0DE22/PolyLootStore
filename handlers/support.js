@@ -2,18 +2,21 @@ import { randomBytes } from 'node:crypto';
 import { customer, sameOrigin } from '../lib/customer-auth.js';
 import { body, fail, json } from '../lib/http.js';
 import { createTicket, getOrder, listCustomerTickets } from '../lib/store.js';
+import { handleSupportThread } from './support-thread.js';
 
 const categories = new Set(['DOWNLOAD', 'ORDER', 'PRODUCT', 'ACCOUNT', 'OTHER']);
 const publicTicket = row => ({ id: row.id, category: row.category, orderId: row.order_id, message: row.message, status: row.status, createdAt: row.created_at });
 
 export default { async fetch(request) {
   try {
+    if (request.method === 'GET' && new URL(request.url).searchParams.has('id')) return handleSupportThread(request);
     const user = await customer(request);
     if (!user) return json({ error: 'กรุณาเข้าสู่ระบบก่อนแจ้งปัญหา' }, 401);
     if (request.method === 'GET') return json({ tickets: (await listCustomerTickets(user.id)).map(publicTicket) });
     if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
     sameOrigin(request);
     const input = await body(request);
+    if (input.action) return handleSupportThread(request, false, input);
     const category = String(input.category || 'OTHER');
     const message = typeof input.message === 'string' ? input.message.trim() : '';
     const orderId = typeof input.orderId === 'string' ? input.orderId.trim().toUpperCase() : '';
