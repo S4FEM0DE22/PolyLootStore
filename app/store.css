@@ -362,6 +362,8 @@ input:not([type=checkbox]):focus{outline:none;border-color:#ff3838;background:#f
 .auth-note a{text-decoration:underline;font-weight:600}
 .password-wrap{position:relative;margin-bottom:0}
 .password-wrap input{margin-bottom:0;padding-right:50px}
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear{display:none;width:0;height:0}
 .toggle-password{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:44px;height:44px;background:transparent;border:0;cursor:pointer;color:#666;border-radius:10px;display:grid;place-items:center}
 .toggle-password:active{transform:translateY(-50%) scale(0.9)}
 @media (hover: hover) and (pointer: fine){

@@ -463,8 +463,10 @@ test('all password forms in storefront and admin have visibility toggle icon but
   // CSS rules exist
   assert.ok(adminCss.includes('.password-wrap'), 'admin.css styles .password-wrap');
   assert.ok(adminCss.includes('.toggle-password'), 'admin.css styles .toggle-password');
+  assert.ok(adminCss.includes('::-ms-reveal'), 'admin.css hides default browser reveal button');
   assert.ok(storeCss.includes('.password-wrap'), 'store.css styles .password-wrap');
   assert.ok(storeCss.includes('.toggle-password'), 'store.css styles .toggle-password');
+  assert.ok(storeCss.includes('::-ms-reveal'), 'store.css hides default browser reveal button');
 });
 
 test('admin app settings uses top-right language and theme icon buttons without details dropdown', () => {
