@@ -48,7 +48,11 @@ function translateText(value, language) {
   if (language === 'th' || !/[\u0E00-\u0E7F]/.test(value)) return value;
   const source = value.trim();
   const exact = dictionary[source];
-  if (exact) return value.replace(value.trim(), exact);
+  if (exact) return value.replace(source, exact);
+
+  const core = source.replace(/^[(\[{"'\s:·→←↑↓\u2713\-\.\,>«]+|[)\]}"'\s:·→←↑↓\u2713\-\.\,<»]+$/g, '');
+  if (core && dictionary[core]) return value.replace(core, dictionary[core]);
+
   const catalog = source.match(/^(.+?)ในชุด (.+?) รวม (\d+) โมเดล \(นับชื่อโมเดลไม่ซ้ำข้ามฟอร์แมต\) รองรับ (.+?) พร้อมภาพตัวอย่างจาก Kenney และลิงก์ตรวจสอบสิทธิ์ CC0 ที่หน้าต้นฉบับ$/);
   if (catalog) return `${dictionary[catalog[1]] || catalog[1]} in ${catalog[2]}. Includes ${catalog[3]} distinct models across formats. Formats: ${catalog[4]}. Kenney previews and a link to verify the CC0 license are provided on the source page.`;
   const counts = source.match(/^(\d+) จาก (\d+) ชุด$/);
@@ -62,13 +66,27 @@ function translateText(value, language) {
     [/^ตัวอย่างชุด (.+) จาก Kenney$/, 'Preview of $1 by Kenney'],
     [/^ภาพรวม (.+)$/, 'Overview of $1'],
     [/^ภาพ (\d+): (.+)$/, 'Image $1: $2'],
+    [/^ภาพตัวอย่างที่ (\d+)$/, 'Preview image $1'],
+    [/^ตัวอย่างที่ (\d+)$/, 'Preview $1'],
     [/^เลือกภาพตัวอย่างสินค้า$/, 'Select product preview'],
     [/^คำสั่งซื้อของ (.+)$/, 'Orders for $1'],
+    [/^คำสั่งซื้อ (.+)$/, 'Order $1'],
+    [/^คำร้องลูกค้า \((\d+)\)$/, 'Support requests ($1)'],
+    [/^คำร้องลูกค้า$/, 'Support requests'],
+    [/^ส่งคำร้องแล้ว เลขอ้างอิง (.+)$/, 'Request sent. Reference: $1'],
+    [/^บัญชีผู้ใช้: (.+)$/, 'Account: $1'],
+    [/^คำถาม (\d+)$/, 'Question $1'],
+    [/^(\d+)\s*KB · พร้อมบันทึกเป็นภาพปก$/, '$1 KB · Ready to save as cover'],
+    [/^(\d+(?:\.\d+)?)\s*MB · ตรวจสอบและดึงข้อมูลแล้ว$/, '$1 MB · Inspected and extracted'],
   ];
   for (const [pattern, replacement] of dynamic) if (pattern.test(source)) return value.replace(source, source.replace(pattern, replacement));
   let result = value;
   for (const phrase of phrases) {
-    if (phrase.length < 4 && phrase !== 'บาท') continue;
+    if (phrase.length < 4 && phrase !== 'บาท') {
+      const regex = new RegExp(`(?<![\\u0E00-\\u0E7F])${phrase}(?![\\u0E00-\\u0E7F])`, 'g');
+      if (regex.test(result)) result = result.replace(regex, dictionary[phrase]);
+      continue;
+    }
     if (result.includes(phrase)) result = result.replaceAll(phrase, dictionary[phrase]);
   }
   return result;
@@ -84,6 +102,8 @@ export function saveDisplayPreferences(value) {
   const next = { ...getDisplayPreferences(), ...value };
   try { localStorage.setItem(key, JSON.stringify(next)); } catch {}
   applyDisplayPreferences();
+  translateCommon(document);
+  window.dispatchEvent(new CustomEvent('polyloot:language-change', { detail: next }));
   return next;
 }
 export function t(th, en) { return getDisplayPreferences().language === 'en' ? (en || dictionary[th] || th) : th; }

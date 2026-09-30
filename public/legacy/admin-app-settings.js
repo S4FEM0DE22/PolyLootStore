@@ -45,7 +45,6 @@ export function mountAdminAppSettings(container) {
     const nextLang = prefs.language === 'en' ? 'th' : 'en';
     saveDisplayPreferences({ language: nextLang });
     syncState();
-    translateCommon(document);
   });
 
   themeBtn.addEventListener('click', () => {
@@ -54,6 +53,8 @@ export function mountAdminAppSettings(container) {
     saveDisplayPreferences({ theme: nextTheme });
     syncState();
   });
+
+  window.addEventListener('polyloot:language-change', syncState);
 
   syncState();
 }

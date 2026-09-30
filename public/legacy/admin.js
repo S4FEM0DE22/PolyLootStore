@@ -1059,6 +1059,12 @@ document.addEventListener('click', event => {
   }
 });
 
+window.addEventListener('polyloot:language-change', () => {
+  if (document.querySelector('.admin-workspace')) render();
+  else if (document.querySelector('.login-card')) renderLogin();
+  translateCommon(document);
+});
+
 try {
   const session = await api('?view=session');
   if (session.authenticated) await load(); else renderLogin(session.configured);

@@ -1385,6 +1385,10 @@ const refreshOnResume = () => {
   if (window.__polylootAuthReturnPending) void window.polylootAuthReturn();
   else void sessionSync.refresh('resume').catch(() => {});
 };
+window.addEventListener('polyloot:language-change', () => {
+  if (bootReady) route(true);
+  translateCommon(document);
+});
 window.addEventListener('polyloot:resume', refreshOnResume);
 window.addEventListener('hashchange', () => { if (postLoginTemporary && location.hash !== postLoginTemporaryHash) clearPostLoginTemporary(); if (bootReady) route(); });
 window.addEventListener('popstate', () => { if (postLoginTemporary && location.hash !== postLoginTemporaryHash) clearPostLoginTemporary(); if (bootReady) route(); });

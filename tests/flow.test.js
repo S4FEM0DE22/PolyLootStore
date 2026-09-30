@@ -618,3 +618,60 @@ test('username supports Thai characters in registration, login, update-profile a
   assert.ok(/pattern="\[A-Za-z0-9_\\u0E00-\\u0E7F\]\{3,24\}"/.test(storefrontJs), 'storefront patterns allow Thai characters');
 });
 
+test('bilingual language switching translates all views and synchronizes through custom events', () => {
+  const settingsUiJs = fs.readFileSync(path.resolve('public/legacy/settings-ui.js'), 'utf8');
+  const translationsEnJs = fs.readFileSync(path.resolve('public/legacy/translations-en.js'), 'utf8');
+  const storefrontJs = fs.readFileSync(path.resolve('public/legacy/storefront.js'), 'utf8');
+  const adminJs = fs.readFileSync(path.resolve('public/legacy/admin.js'), 'utf8');
+  const adminAppSettingsJs = fs.readFileSync(path.resolve('public/legacy/admin-app-settings.js'), 'utf8');
+
+  // Verify settings-ui dispatches polyloot:language-change event
+  assert.ok(settingsUiJs.includes('polyloot:language-change'), 'settings-ui dispatches polyloot:language-change');
+  assert.ok(settingsUiJs.includes('translateCommon(document)'), 'settings-ui calls translateCommon on saveDisplayPreferences');
+
+  // Verify storefront, admin and admin-app-settings listen for language changes
+  assert.ok(storefrontJs.includes('polyloot:language-change'), 'storefront listens for polyloot:language-change');
+  assert.ok(adminJs.includes('polyloot:language-change'), 'admin listens for polyloot:language-change');
+  assert.ok(adminAppSettingsJs.includes('polyloot:language-change'), 'admin-app-settings listens for polyloot:language-change');
+
+  // Verify critical UI keys exist in translations
+  const requiredKeys = [
+    'PolyLoot หน้าร้าน',
+    'การแจ้งเตือนล่าสุด 7 วัน',
+    'กำลังโหลดร้านแอสเซ็ต…',
+    'ทางลัดการตั้งค่า',
+    'ไทย',
+    'สว่าง',
+    'มืด',
+    'ตามอุปกรณ์',
+    'ตัวละคร',
+    'ฉากและสภาพแวดล้อม',
+    'อาวุธ',
+    'ยานพาหนะ',
+    'สิ่งของและของประกอบฉาก',
+    'ทุกสถานะ',
+    'กรองสถานะ',
+    'รอชำระ',
+    'ชำระแล้ว',
+    'ยกเลิกแล้ว',
+    'ลบ',
+    'แก้ไข',
+    'ยืนยันลบถาวร',
+    'ซ่อนจากหน้าร้านแทน',
+    'ตรวจพบ',
+    'ขนาดไฟล์',
+    'ขนาดแตกไฟล์',
+    'ข้อมูลสเปกโมเดล',
+    'คุณสมบัติเด่น',
+    'สิทธิ์การใช้งาน (License)',
+    'สิ่งที่รวมในแพ็กเกจนี้',
+    'บัตรเครดิต (ตัวอย่าง)',
+    'QR PromptPay (ตัวอย่าง)',
+    'โหมดทดสอบในเครื่อง'
+  ];
+
+  for (const key of requiredKeys) {
+    const hasKey = translationsEnJs.includes('"' + key + '"') || translationsEnJs.includes("'" + key + "'");
+    assert.ok(hasKey, 'Missing key in translations: ' + key);
+  }
+});
