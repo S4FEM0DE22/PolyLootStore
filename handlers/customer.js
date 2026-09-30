@@ -38,7 +38,7 @@ function publicUser(user) {
     avatarUrl: user.avatarUrl || user.avatar_url || null
   };
 }
-const validUsername = value => typeof value === 'string' && /^[a-z0-9_]{3,24}$/.test(value);
+const validUsername = value => typeof value === 'string' && /^[a-z0-9_\u0E00-\u0E7F]{3,24}$/iu.test(value);
 
 export default { async fetch(request) {
   try {
@@ -100,7 +100,7 @@ export default { async fetch(request) {
       if (!user) return json({ error: 'กรุณาเข้าสู่ระบบ' }, 401);
       if (user.username) return json({ error: 'บัญชีนี้มี Username แล้ว' }, 409);
       const username = typeof input.username === 'string' ? input.username.trim().toLowerCase() : '';
-      if (!validUsername(username)) return json({ error: 'Username ต้องมี 3–24 ตัว ใช้ a-z, 0-9 หรือ _' }, 400);
+      if (!validUsername(username)) return json({ error: 'Username ต้องมี 3–24 ตัว ใช้ภาษาไทย, a-z, 0-9 หรือ _' }, 400);
       if (!await claimUsername(user, username)) return json({ error: 'Username นี้มีคนใช้แล้ว' }, 409);
       return reply({ user: publicUser({ ...user, username }) }, 200, sessionCookie(request, { ...user, username }));
     }
@@ -114,7 +114,7 @@ export default { async fetch(request) {
       let currentUsername = user.username;
       const targetUsername = typeof input.username === 'string' ? input.username.trim().toLowerCase() : '';
       if (targetUsername && targetUsername !== currentUsername) {
-        if (!validUsername(targetUsername)) return json({ error: 'Username ต้องมี 3–24 ตัว ใช้ a-z, 0-9 หรือ _' }, 400);
+        if (!validUsername(targetUsername)) return json({ error: 'Username ต้องมี 3–24 ตัว ใช้ภาษาไทย, a-z, 0-9 หรือ _' }, 400);
         if (!currentUsername) {
           if (!await claimUsername(user, targetUsername)) return json({ error: 'Username นี้มีคนใช้แล้ว' }, 409);
         } else {
@@ -153,7 +153,7 @@ export default { async fetch(request) {
     }
     if (input.action === 'register') {
       const username = typeof input.username === 'string' ? input.username.trim().toLowerCase() : '';
-      if (!validUsername(username) || !email) return json({ error: 'กรุณาตรวจ Username และอีเมล (Username ใช้ a-z, 0-9 หรือ _ จำนวน 3–24 ตัว)' }, 400);
+      if (!validUsername(username) || !email) return json({ error: 'กรุณาตรวจ Username และอีเมล (Username ใช้ภาษาไทย, a-z, 0-9 หรือ _ จำนวน 3–24 ตัว)' }, 400);
       if (input.confirmPassword != null && input.confirmPassword !== password) return json({ error: 'รหัสผ่านทั้งสองช่องไม่ตรงกัน' }, 400);
       const first = typeof input.first === 'string' ? input.first.trim() : (typeof input.firstName === 'string' ? input.firstName.trim() : '');
       const last = typeof input.last === 'string' ? input.last.trim() : (typeof input.lastName === 'string' ? input.lastName.trim() : '');

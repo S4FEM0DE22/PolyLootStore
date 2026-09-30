@@ -5,7 +5,7 @@ create table if not exists public.customer_profiles (
   email text not null,
   session_version integer not null default 1,
   created_at timestamptz not null default now(),
-  constraint customer_username_format check (username is null or username ~ '^[a-z0-9_]{3,24}$')
+  constraint customer_username_format check (username is null or username ~* '^[a-z0-9_\\u0e00-\\u0e7f]{3,24}$')
 );
 
 alter table public.customer_profiles enable row level security;

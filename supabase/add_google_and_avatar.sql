@@ -19,7 +19,7 @@ begin
   raw_full := coalesce(nullif(new.raw_user_meta_data ->> 'full_name', ''), nullif(new.raw_user_meta_data ->> 'name', ''));
 
   if tg_op = 'INSERT' then
-    candidate_username := nullif(lower(regexp_replace(coalesce(new.raw_user_meta_data ->> 'username', split_part(new.email, '@', 1)), '[^a-z0-9_]', '', 'g')), '');
+    candidate_username := nullif(lower(regexp_replace(coalesce(new.raw_user_meta_data ->> 'username', split_part(new.email, '@', 1)), '[^a-z0-9_\\u0e00-\\u0e7f]', '', 'g')), '');
     if candidate_username is not null and length(candidate_username) < 3 then
       candidate_username := candidate_username || '_user';
     end if;

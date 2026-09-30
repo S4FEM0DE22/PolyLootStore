@@ -551,3 +551,70 @@ test('post-login page is treated as temporary and replaced in browser history on
   currentHash = historyStack[historyStack.length - 1];
   assert.equal(currentHash, '#home');
 });
+
+test('username supports Thai characters in registration, login, update-profile and form patterns', async () => {
+  const tag = randomBytes(4).toString('hex');
+  const thaiUsername = 'ผู้เล่น_' + tag;
+  const thaiUpdated = 'สุดหล่อ_' + tag;
+
+  // 1. Register with Thai username
+  const signup = await customerApi.fetch(post('/api/customer', {
+    action: 'register',
+    username: thaiUsername,
+    email: 'thai_' + tag + '@example.test',
+    password: 'SamplePass123!',
+    first: 'สมชาย',
+    last: 'ใจดี'
+  }));
+  assert.equal(signup.status, 201);
+  const signupData = await signup.json();
+  assert.equal(signupData.user.username, thaiUsername);
+
+  // 2. Login using Thai username as identifier
+  const loginRes = await customerApi.fetch(post('/api/customer', {
+    action: 'login',
+    identifier: thaiUsername,
+    password: 'SamplePass123!'
+  }));
+  assert.equal(loginRes.status, 200);
+  const loginData = await loginRes.json();
+  assert.equal(loginData.user.username, thaiUsername);
+  const cookie = loginRes.headers.get('set-cookie')?.split(';')[0];
+
+  // 3. Update profile to a new Thai username
+  const updateRes = await customerApi.fetch(post('/api/customer', {
+    action: 'update-profile',
+    first: 'สมชาย',
+    last: 'ใจดี',
+    username: thaiUpdated
+  }, cookie));
+  assert.equal(updateRes.status, 200);
+  const updateData = await updateRes.json();
+  assert.equal(updateData.user.username, thaiUpdated);
+
+  // 4. Invalid username formats are rejected
+  const shortRes = await customerApi.fetch(post('/api/customer', {
+    action: 'register',
+    username: 'ก',
+    email: 'short_' + tag + '@example.test',
+    password: 'SamplePass123!',
+    first: 'ส',
+    last: 'จ'
+  }));
+  assert.equal(shortRes.status, 400);
+
+  const invalidCharRes = await customerApi.fetch(post('/api/customer', {
+    action: 'register',
+    username: 'ไทย!@#$%',
+    email: 'invalid_' + tag + '@example.test',
+    password: 'SamplePass123!',
+    first: 'ส',
+    last: 'จ'
+  }));
+  assert.equal(invalidCharRes.status, 400);
+
+  // 5. Storefront HTML patterns allow Thai characters
+  const storefrontJs = fs.readFileSync(path.resolve('public/legacy/storefront.js'), 'utf8');
+  assert.ok(/pattern="\[A-Za-z0-9_\\u0E00-\\u0E7F\]\{3,24\}"/.test(storefrontJs), 'storefront patterns allow Thai characters');
+});
+

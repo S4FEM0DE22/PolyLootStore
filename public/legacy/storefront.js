@@ -790,7 +790,7 @@ function authPage(mode = 'login', message = '') {
   if (customerUser) { window.history.replaceState(null, '', safeDestination(authNext) === '#catalog' ? '#profile' : safeDestination(authNext)); return route(); }
   const register = mode === 'register';
   const formFields = register
-    ? `<label for="auth-username">Username</label><input id="auth-username" name="username" autocomplete="username" required minlength="3" maxlength="24" pattern="[A-Za-z0-9_]{3,24}" placeholder="Username"><p class="field-note">ใช้ตัวอักษรอังกฤษ ตัวเลข หรือ _ จำนวน 3–24 ตัว</p><label for="auth-first">ชื่อ</label><input id="auth-first" name="first" autocomplete="given-name" required maxlength="80" placeholder="ชื่อ"><label for="auth-last">นามสกุล</label><input id="auth-last" name="last" autocomplete="family-name" required maxlength="80" placeholder="นามสกุล"><label for="auth-email">อีเมล</label><input id="auth-email" name="email" type="email" autocomplete="email" required maxlength="254" placeholder="อีเมล">`
+    ? `<label for="auth-username">Username</label><input id="auth-username" name="username" autocomplete="username" required minlength="3" maxlength="24" pattern="[A-Za-z0-9_\u0E00-\u0E7F]{3,24}" placeholder="Username"><p class="field-note">ใช้ภาษาไทย ตัวอักษรอังกฤษ ตัวเลข หรือ _ จำนวน 3–24 ตัว</p><label for="auth-first">ชื่อ</label><input id="auth-first" name="first" autocomplete="given-name" required maxlength="80" placeholder="ชื่อ"><label for="auth-last">นามสกุล</label><input id="auth-last" name="last" autocomplete="family-name" required maxlength="80" placeholder="นามสกุล"><label for="auth-email">อีเมล</label><input id="auth-email" name="email" type="email" autocomplete="email" required maxlength="254" placeholder="อีเมล">`
     : `<label for="auth-identifier">Username หรืออีเมล</label><input id="auth-identifier" name="identifier" autocomplete="username" required maxlength="254" placeholder="Username หรืออีเมล">`;
   const passIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
   const passWrap = (id, name, auto, placeholder) => `<div class="password-wrap"><input id="${id}" name="${name}" type="password" autocomplete="${auto}" required minlength="8" maxlength="128" placeholder="${placeholder}"><button type="button" class="toggle-password" aria-label="แสดงรหัสผ่าน" aria-pressed="false">${passIcon}</button></div>`;
@@ -1127,8 +1127,8 @@ function profile(feedback = null) {
           <form id="profile-form" class="profile-form">
             <div class="form-group">
               <label for="profile-username">Username</label>
-              <input id="profile-username" name="username" value="${esc(customerUser.username || '')}" required minlength="3" maxlength="24" pattern="[A-Za-z0-9_]{3,24}" placeholder="Username">
-              <p class="field-note">Username สำหรับเข้าสู่ระบบและระบุตัวตน (3–24 ตัว ใช้ a-z, 0-9 หรือ _)</p>
+              <input id="profile-username" name="username" value="${esc(customerUser.username || '')}" required minlength="3" maxlength="24" pattern="[A-Za-z0-9_\u0E00-\u0E7F]{3,24}" placeholder="Username">
+              <p class="field-note">Username สำหรับเข้าสู่ระบบและระบุตัวตน (3–24 ตัว ใช้ภาษาไทย, a-z, 0-9 หรือ _)</p>
             </div>
             <div class="form-group">
               <label for="profile-first">ชื่อ</label>
