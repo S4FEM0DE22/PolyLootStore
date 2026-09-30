@@ -96,6 +96,33 @@ function readSession(key, fallback) {
   try { return JSON.parse(sessionStorage.getItem(key)) ?? fallback; } catch { return fallback; }
 }
 function writeSession(key, value) { try { sessionStorage.setItem(key, JSON.stringify(value)); } catch {} }
+let postLoginTemporary = Boolean(readSession('safe-post-login-temp', ''));
+let postLoginTemporaryHash = readSession('safe-post-login-temp', '');
+function clearPostLoginTemporary() {
+  postLoginTemporary = false;
+  postLoginTemporaryHash = '';
+  try { sessionStorage.removeItem('safe-post-login-temp'); } catch {}
+}
+function setHash(hash) {
+  if (postLoginTemporary && hash !== postLoginTemporaryHash) {
+    clearPostLoginTemporary();
+    window.history.replaceState(null, '', hash);
+    route();
+    return;
+  }
+  location.hash = hash;
+}
+document.addEventListener('click', event => {
+  if (!postLoginTemporary) return;
+  const link = event.target.closest('a[href^="#"]');
+  if (!link) return;
+  const targetHash = link.getAttribute('href');
+  if (!targetHash || targetHash === location.hash || targetHash === postLoginTemporaryHash) return;
+  event.preventDefault();
+  clearPostLoginTemporary();
+  window.history.replaceState(null, '', targetHash);
+  route();
+}, true);
 function cartStorageKey(user = customerUser) {
   if (user && user.email) {
     return `polyloot-cart-user-${user.email.trim().toLowerCase()}`;
@@ -152,11 +179,14 @@ function clearActiveFocus() {
     document.activeElement.blur();
   }
 }
-function finishAuth() {
+function finishAuth(destination) {
   sessionSync.invalidate();
   notificationCenter.reset();
-  const next = safeDestination(authNext);
+  const next = destination || safeDestination(authNext);
   rememberDestination('#catalog');
+  postLoginTemporary = true;
+  postLoginTemporaryHash = next;
+  writeSession('safe-post-login-temp', next);
   window.history.replaceState(null, '', next);
   route(true);
   syncCustomerSettings();
@@ -172,8 +202,14 @@ async function syncCustomerSettings() {
 }
 function goBack(fallback = '#home') {
   clearActiveFocus();
+  if (postLoginTemporary) {
+    clearPostLoginTemporary();
+    window.history.replaceState(null, '', fallback);
+    route();
+    return;
+  }
   if (window.history.length > 1 && (!document.referrer || document.referrer.startsWith(location.origin))) window.history.back();
-  else location.hash = fallback;
+  else setHash(fallback);
 }
 const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 const money = amount => getDisplayPreferences().language === 'en'
@@ -268,7 +304,7 @@ function setView(html, active = '') {
   refreshCartCount();
   window.scrollTo(0, 0);
 }
-function addToCart(id) { if (!cart.includes(id) && cart.length < 20) cart.push(id); selected.add(id); saveCart(); location.hash = '#cart'; cartPage(); }
+function addToCart(id) { if (!cart.includes(id) && cart.length < 20) cart.push(id); selected.add(id); saveCart(); setHash('#cart'); cartPage(); }
 function orderTabs(active) { return `<div class="order-tabs" role="navigation" aria-label="ส่วนคำสั่งซื้อ"><a class="${active === 'track' ? 'active' : ''}" href="#track">ติดตามคำสั่งซื้อ</a><a class="${active === 'history' ? 'active' : ''}" href="#history">ประวัติการสั่งซื้อ</a></div>`; }
 function statusInfo(order) {
   if (order.status === 'PAID') return { className: 'paid', label: '3D Asset พร้อมใช้งาน', short: 'PAID' };
@@ -1033,6 +1069,7 @@ async function logoutCustomer(button) {
     notificationCount.hidden = true;
     currentOrder = null;
     customerEmail = '';
+    clearPostLoginTemporary();
     rememberDestination('#catalog');
     profileData = { name: '', firstName: '', lastName: '', email: '' };
     writeSession('safe-profile', profileData);
@@ -1302,7 +1339,7 @@ app.addEventListener('error', event => {
   fallback.textContent = img.alt.replace(/^ปกแอสเซ็ต\s*/, '');
   img.replaceWith(fallback);
 }, true);
-navAuthAction.addEventListener('click', () => { if (customerUser) { location.hash = '#profile'; profile(); } else { rememberDestination(location.hash || '#home'); location.hash = '#login'; authPage(); } });
+navAuthAction.addEventListener('click', () => { if (customerUser) { setHash('#profile'); profile(); } else { rememberDestination(location.hash || '#home'); setHash('#login'); authPage(); } });
 let bootReady = false;
 const sessionSync = createSessionSync(() => api('customer?view=session'), (user, reason) => {
   const changed = JSON.stringify(customerUser) !== JSON.stringify(user);
@@ -1325,14 +1362,13 @@ const sessionSync = createSessionSync(() => api('customer?view=session'), (user,
   if (reason === 'auth-return') {
     if (!user) throw new Error(t('ยังไม่พบเซสชัน กรุณาลองตรวจสอบอีกครั้ง', 'Session is not available yet. Please retry.'));
     delete window.__polylootAuthReturnPending;
-    window.history.replaceState(null, '', '#profile');
-    route(true);
+    finishAuth('#profile');
   } else if (reason === 'bootstrap') {
     // Account/login screens must not wait for catalog or public settings.
     if (/^#(?:profile|login|register)$/.test(location.hash)) route(true);
   } else if (changed && bootReady) {
-    if (user && /^#(?:login|register)$/.test(location.hash)) window.history.replaceState(null, '', safeDestination(authNext));
-    route(true);
+    if (user && /^#(?:login|register)$/.test(location.hash)) finishAuth();
+    else route(true);
   }
 });
 window.polylootAuthReturn = () => {
@@ -1350,8 +1386,8 @@ const refreshOnResume = () => {
   else void sessionSync.refresh('resume').catch(() => {});
 };
 window.addEventListener('polyloot:resume', refreshOnResume);
-window.addEventListener('hashchange', () => { if (bootReady) route(); });
-window.addEventListener('popstate', () => { if (bootReady) route(); });
+window.addEventListener('hashchange', () => { if (postLoginTemporary && location.hash !== postLoginTemporaryHash) clearPostLoginTemporary(); if (bootReady) route(); });
+window.addEventListener('popstate', () => { if (postLoginTemporary && location.hash !== postLoginTemporaryHash) clearPostLoginTemporary(); if (bootReady) route(); });
 window.addEventListener('pageshow', event => { clearActiveFocus(); if (event.persisted) refreshOnResume(); });
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible') return;
@@ -1391,8 +1427,7 @@ try {
         profileData = { name: customerUser.name || '', firstName: customerUser.firstName || '', lastName: customerUser.lastName || '', email: customerUser.email };
         writeSession('safe-profile', profileData);
         switchCartToUser(customerUser);
-        window.history.replaceState(null, '', '#profile');
-        finishAuth();
+        finishAuth('#profile');
       } catch (err) {
         window.history.replaceState(null, '', '#login');
         authPage('login', err.message || 'การเข้าสู่ระบบด้วย Google ไม่สำเร็จ');
@@ -1410,8 +1445,7 @@ try {
       profileData = { name: customerUser.name || '', firstName: customerUser.firstName || '', lastName: customerUser.lastName || '', email: customerUser.email };
       writeSession('safe-profile', profileData);
       switchCartToUser(customerUser);
-      window.history.replaceState(null, '', '#profile');
-      finishAuth();
+      finishAuth('#profile');
     } catch (err) {
       window.history.replaceState(null, '', '#login');
       authPage('login', err.message || 'การเข้าสู่ระบบด้วย Google ไม่สำเร็จ');

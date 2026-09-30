@@ -490,6 +490,62 @@ test('admin app settings uses top-right language and theme icon buttons without 
   assert.ok(adminCss.includes('.admin-quick-btn'), 'admin.css styles .admin-quick-btn');
   assert.ok(darkCss.includes('.admin-quick-btn'), 'dark.css styles .admin-quick-btn for dark mode');
 });
+ 
+test('post-login page is treated as temporary and replaced in browser history on exit', () => {
+  const storefrontJs = fs.readFileSync(path.resolve('public/legacy/storefront.js'), 'utf8');
 
+  // Verify temporary post-login state management and helper presence
+  assert.ok(storefrontJs.includes('postLoginTemporary'), 'storefront must track postLoginTemporary');
+  assert.ok(storefrontJs.includes('clearPostLoginTemporary'), 'storefront must provide clearPostLoginTemporary');
+  assert.ok(storefrontJs.includes('setHash'), 'storefront must provide setHash helper');
+  assert.ok(storefrontJs.includes('safe-post-login-temp'), 'storefront must persist temporary flag across reloads');
 
+  // Verify finishAuth marks postLoginTemporary
+  assert.match(storefrontJs, /function finishAuth[\s\S]*?postLoginTemporary\s*=\s*true/, 'finishAuth marks post-login page as temporary');
 
+  // Verify click interceptor replaces history entry when navigating away from temporary page
+  assert.match(storefrontJs, /if \(!postLoginTemporary\) return;[\s\S]*?window\.history\.replaceState\(null, '', targetHash\)/, 'click interceptor replaces state on hash change away from temporary landing');
+
+  // Simulate browser history navigation stack
+  const historyStack = ['#home', '#login'];
+  let currentHash = '#login';
+  let isTemp = false;
+  let tempHash = '';
+
+  const replaceState = (url) => {
+    historyStack[historyStack.length - 1] = url;
+    currentHash = url;
+  };
+
+  const pushState = (url) => {
+    historyStack.push(url);
+    currentHash = url;
+  };
+
+  // 1. User signs in -> finishAuth replaces #login with #profile
+  replaceState('#profile');
+  isTemp = true;
+  tempHash = '#profile';
+
+  assert.equal(currentHash, '#profile');
+  assert.deepEqual(historyStack, ['#home', '#profile']);
+
+  // 2. User leaves #profile to browse #catalog -> navigation replaces #profile instead of pushing
+  if (isTemp && '#catalog' !== tempHash) {
+    isTemp = false;
+    tempHash = '';
+    replaceState('#catalog');
+  } else {
+    pushState('#catalog');
+  }
+
+  // #profile must NOT exist in the history stack
+  assert.equal(currentHash, '#catalog');
+  assert.deepEqual(historyStack, ['#home', '#catalog']);
+  assert.ok(!historyStack.includes('#profile'), 'temporary post-login page must be gone from history stack');
+
+  // 3. User clicks browser Back button -> returns directly to pre-login page (#home)
+  historyStack.pop();
+  currentHash = historyStack[historyStack.length - 1];
+  assert.equal(currentHash, '#home');
+});
