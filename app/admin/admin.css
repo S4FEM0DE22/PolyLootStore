@@ -273,16 +273,22 @@ h1,h2,h3,.admin-nav button,.admin-nav a,.primary{font-family:Prompt,Inter,system
 .admin-auth-main{background:var(--surface);border:1px solid var(--border);border-radius:32px;align-items:center}
 .login-card{background:#fff;min-height:0;border:1px solid var(--border);border-radius:30px;box-shadow:0 18px 55px #2038200c}
 .login-card h2{color:var(--ink)}
-.admin-auth-main{align-content:center;gap:24px}
-.admin-app-settings{padding:24px 30px}
-.admin-app-settings summary{display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;list-style:none;border-radius:24px;min-height:44px;color:var(--ink)}
-.admin-app-settings summary::-webkit-details-marker{display:none}
-.admin-app-settings summary .menu-icon{width:22px;height:22px;flex:none}
-.admin-app-settings summary::after{content:'+';margin-left:auto;font-size:1.4rem}
-.admin-app-settings[open] summary::after{content:'−'}
-.admin-app-settings label{font-size:1rem;margin:18px 0 8px}
-.admin-app-settings .muted{font-size:.9rem;color:var(--muted);overflow-wrap:anywhere}
-.app-settings-result{font-size:.9rem;margin-top:12px;color:var(--ink)}
+.admin-auth-main{align-content:center;position:relative}
+.admin-quick-settings{display:flex;align-items:center;gap:8px}
+.admin-auth-main > .admin-quick-settings,
+.admin-auth-layout > .admin-quick-settings{position:absolute;top:28px;right:32px;z-index:100}
+.admin-quick-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:44px;height:44px;padding:0 12px;border-radius:22px;border:1.5px solid var(--border);background:#fff;color:var(--ink);font-weight:600;font-size:0.85rem;cursor:pointer;transition:all 0.2s cubic-bezier(0.2,0,0,1);box-shadow:0 2px 8px rgba(0,0,0,0.04);line-height:1}
+.admin-quick-btn:hover{background:var(--surface);border-color:var(--lime-line);color:var(--forest);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.08)}
+.admin-quick-btn:active{transform:translateY(0) scale(0.96)}
+.admin-quick-btn svg{width:20px;height:20px;flex-shrink:0}
+.admin-quick-tag{font-size:0.8rem;font-weight:700;letter-spacing:0.04em}
+@media(max-width:850px){
+  .admin-auth-main > .admin-quick-settings,
+  .admin-auth-layout > .admin-quick-settings{top:14px;right:14px;gap:6px}
+  .admin-quick-btn{min-width:40px;height:40px;padding:0 10px}
+}
+
+
 .pill-button.outline{background:#fff;border:1px solid var(--border);color:var(--ink)}
 @media (hover:hover) and (pointer:fine){.pill-button.outline:hover{background:var(--surface);border-color:var(--lime-line);color:var(--ink)}}
 .metric,.asset,.admin-order-row,.customer-row{border:1px solid var(--border);box-shadow:none;border-radius:24px}

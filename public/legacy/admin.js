@@ -948,6 +948,7 @@ function render() {
   document.querySelector('.admin-nav .nav-group').insertAdjacentHTML('beforeend', `<button data-view="alerts" class="${view === 'alerts' ? 'active' : ''}">${t('การแจ้งเตือน', 'Notifications')} <span class="admin-alert-count">${data.orders.filter(item => item.status === 'PENDING').length + (data.tickets || []).filter(item => item.status !== 'RESOLVED').length}</span></button><button data-view="settings" class="${view === 'settings' ? 'active' : ''}">${t('ตั้งค่าร้าน', 'Store settings')}</button>`);
   if (view === 'settings') document.querySelector('.admin-content').innerHTML = settingsPanel();
   document.querySelector('.content-actions').insertAdjacentHTML('afterbegin', notificationBell());
+  mountAdminAppSettings(document.querySelector('.content-actions'));
   if (view === 'alerts') {
     document.querySelector('.admin-content').innerHTML = '<section id="notification-center-page"></section>';
     notificationCenter.mountPage(document.querySelector('#notification-center-page'));

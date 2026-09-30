@@ -467,4 +467,29 @@ test('all password forms in storefront and admin have visibility toggle icon but
   assert.ok(storeCss.includes('.toggle-password'), 'store.css styles .toggle-password');
 });
 
+test('admin app settings uses top-right language and theme icon buttons without details dropdown', () => {
+  const adminAppSettingsJs = fs.readFileSync(path.resolve('public/legacy/admin-app-settings.js'), 'utf8');
+  const adminJs = fs.readFileSync(path.resolve('public/legacy/admin.js'), 'utf8');
+  const adminCss = fs.readFileSync(path.resolve('app/admin/admin.css'), 'utf8');
+  const darkCss = fs.readFileSync(path.resolve('app/dark.css'), 'utf8');
+
+  // No longer uses details or summary
+  assert.ok(!adminAppSettingsJs.includes('details'), 'admin-app-settings does not use details');
+  assert.ok(!adminAppSettingsJs.includes('summary'), 'admin-app-settings does not use summary');
+
+  // Uses top-right quick settings with language and theme icon buttons
+  assert.ok(adminAppSettingsJs.includes('admin-quick-settings'), 'Has admin-quick-settings container');
+  assert.ok(adminAppSettingsJs.includes('admin-lang-toggle'), 'Has language toggle button');
+  assert.ok(adminAppSettingsJs.includes('admin-theme-toggle'), 'Has theme toggle button');
+
+  // Admin page mounts quick settings
+  assert.ok(adminJs.includes('mountAdminAppSettings'), 'admin.js imports and calls mountAdminAppSettings');
+
+  // CSS positions quick settings at top right and styles buttons
+  assert.ok(adminCss.includes('.admin-quick-settings'), 'admin.css styles .admin-quick-settings');
+  assert.ok(adminCss.includes('.admin-quick-btn'), 'admin.css styles .admin-quick-btn');
+  assert.ok(darkCss.includes('.admin-quick-btn'), 'dark.css styles .admin-quick-btn for dark mode');
+});
+
+
 

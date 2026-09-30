@@ -77,12 +77,12 @@ html[data-theme='dark'] :is(.product-specs span,.hero-pill,.demo-note,.nav-notic
   color: var(--ink) !important;
   border-color: var(--border) !important;
 }
-html[data-theme='dark'] :is(.quick-cat-btn,.google-auth-btn,.gallery-caption,.help-grid article,.product-showcase-count,.detail-license,.card-engine-tag,.spec-badge,.contact-grid article,.store-announcement,.ticket-row,.category-tile) {
+html[data-theme='dark'] :is(.quick-cat-btn,.google-auth-btn,.gallery-caption,.help-grid article,.product-showcase-count,.detail-license,.card-engine-tag,.spec-badge,.contact-grid article,.store-announcement,.ticket-row,.category-tile,.admin-quick-btn) {
   background: #26392d !important;
   color: var(--ink) !important;
   border-color: var(--border) !important;
 }
-html[data-theme='dark'] :is(.quick-cat-btn:hover,.quick-cat-btn.active,.google-auth-btn:hover,.toggle-password:hover) {
+html[data-theme='dark'] :is(.quick-cat-btn:hover,.quick-cat-btn.active,.google-auth-btn:hover,.toggle-password:hover,.admin-quick-btn:hover) {
   background: #a5d1aa !important;
   color: #102017 !important;
   border-color: #a5d1aa !important;
