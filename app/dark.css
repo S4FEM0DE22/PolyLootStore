@@ -82,7 +82,7 @@ html[data-theme='dark'] :is(.quick-cat-btn,.google-auth-btn,.gallery-caption,.he
   color: var(--ink) !important;
   border-color: var(--border) !important;
 }
-html[data-theme='dark'] :is(.quick-cat-btn:hover,.quick-cat-btn.active,.google-auth-btn:hover) {
+html[data-theme='dark'] :is(.quick-cat-btn:hover,.quick-cat-btn.active,.google-auth-btn:hover,.toggle-password:hover) {
   background: #a5d1aa !important;
   color: #102017 !important;
   border-color: #a5d1aa !important;

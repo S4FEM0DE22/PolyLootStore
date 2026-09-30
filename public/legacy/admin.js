@@ -58,11 +58,20 @@ function toast(message, bad = false) {
 
 function renderLogin(configured = true) {
   notificationCenter.reset();
-  app.innerHTML = `<div class="admin-auth-layout"><div class="admin-auth-side">${adminNavigation.brand}<div class="admin-auth-hero"><span class="eyebrow">ADMIN WORKSPACE</span><h1>ระบบผู้ดูแลร้าน</h1><p>จัดการแอสเซ็ต คำสั่งซื้อ และข้อมูลร้านจากพื้นที่เดียว</p></div>${adminNavigation.loginBackLink}</div><div class="admin-auth-main"><form class="login-card" id="login-form"><h2>เข้าสู่ระบบ</h2><p class="muted">กรุณากรอกรหัสผ่านเพื่อเข้าใช้งาน</p><label for="password">รหัสผ่านผู้ดูแล</label><input class="field" id="password" type="password" autocomplete="current-password" required autofocus placeholder="Password"><button class="primary" type="submit">เข้าสู่หลังบ้าน</button><div class="error" id="login-error" role="alert">${configured ? '' : 'ยังไม่ได้ตั้งค่ารหัสผู้ดูแลบนเซิร์ฟเวอร์'}</div></form></div></div>`;
+  const passIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+  app.innerHTML = `<div class="admin-auth-layout"><div class="admin-auth-side">${adminNavigation.brand}<div class="admin-auth-hero"><span class="eyebrow">ADMIN WORKSPACE</span><h1>ระบบผู้ดูแลร้าน</h1><p>จัดการแอสเซ็ต คำสั่งซื้อ และข้อมูลร้านจากพื้นที่เดียว</p></div>${adminNavigation.loginBackLink}</div><div class="admin-auth-main"><form class="login-card" id="login-form"><h2>เข้าสู่ระบบ</h2><p class="muted">กรุณากรอกรหัสผ่านเพื่อเข้าใช้งาน</p><label for="password">รหัสผ่านผู้ดูแล</label><div class="password-wrap"><input class="field" id="password" type="password" autocomplete="current-password" required autofocus placeholder="Password"><button type="button" class="toggle-password" aria-label="แสดงรหัสผ่าน" aria-pressed="false">${passIcon}</button></div><button class="primary" type="submit">เข้าสู่หลังบ้าน</button><div class="error" id="login-error" role="alert">${configured ? '' : 'ยังไม่ได้ตั้งค่ารหัสผู้ดูแลบนเซิร์ฟเวอร์'}</div></form></div></div>`;
   mountAdminAppSettings(document.querySelector('.admin-auth-main'));
+  document.querySelectorAll('.toggle-password').forEach(btn => btn.addEventListener('click', e => {
+    const input = e.currentTarget.previousElementSibling;
+    const isPass = input.type === 'password';
+    input.type = isPass ? 'text' : 'password';
+    e.currentTarget.setAttribute('aria-pressed', String(isPass));
+    e.currentTarget.setAttribute('aria-label', isPass ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน');
+    e.currentTarget.innerHTML = isPass ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>' : passIcon;
+  }));
   document.querySelector('#login-form').addEventListener('submit', async event => {
     event.preventDefault();
-    const button = event.currentTarget.querySelector('button');
+    const button = event.currentTarget.querySelector('button[type=submit]');
     button.disabled = true;
     document.querySelector('#login-error').textContent = '';
     try {

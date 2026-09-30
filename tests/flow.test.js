@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomBytes } from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
 import assetsApi from '../handlers/assets.js';
 import customerApi from '../handlers/customer.js';
 import ordersApi from '../handlers/orders.js';
@@ -438,6 +440,31 @@ test('cart items are isolated per account, emptied on logout, and restored on sw
   // Step 6: User B logs back in -> User B items completely restored
   activeCart = readUserCart(userB);
   assert.deepEqual(activeCart, ['nature-kit']);
+});
+
+test('all password forms in storefront and admin have visibility toggle icon button', () => {
+
+  const adminJs = fs.readFileSync(path.resolve('public/legacy/admin.js'), 'utf8');
+  const storefrontJs = fs.readFileSync(path.resolve('public/legacy/storefront.js'), 'utf8');
+  const adminCss = fs.readFileSync(path.resolve('app/admin/admin.css'), 'utf8');
+  const storeCss = fs.readFileSync(path.resolve('app/store.css'), 'utf8');
+
+  // Admin login has password-wrap and toggle-password button
+  assert.ok(adminJs.includes('password-wrap'), 'Admin login must have password-wrap container');
+  assert.ok(adminJs.includes('toggle-password'), 'Admin login must have toggle-password button');
+  assert.match(adminJs, /id="password"[^>]*type="password"/, 'Admin login has password field');
+  assert.match(adminJs, /querySelectorAll\('\.toggle-password'\)/, 'Admin login attaches click listener to toggle-password');
+
+  // Storefront has password-wrap and toggle-password
+  assert.ok(storefrontJs.includes('toggle-password'), 'Storefront must have toggle-password button');
+  assert.ok(storefrontJs.includes("passWrap('auth-password'"), 'Storefront wraps auth-password with passWrap');
+  assert.ok(storefrontJs.includes("passWrap('reset-password'"), 'Storefront wraps reset-password with passWrap');
+
+  // CSS rules exist
+  assert.ok(adminCss.includes('.password-wrap'), 'admin.css styles .password-wrap');
+  assert.ok(adminCss.includes('.toggle-password'), 'admin.css styles .toggle-password');
+  assert.ok(storeCss.includes('.password-wrap'), 'store.css styles .password-wrap');
+  assert.ok(storeCss.includes('.toggle-password'), 'store.css styles .toggle-password');
 });
 
 

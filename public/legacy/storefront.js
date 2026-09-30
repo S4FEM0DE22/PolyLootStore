@@ -786,6 +786,7 @@ function authPage(mode = 'login', message = '') {
     const isPass = input.type === 'password';
     input.type = isPass ? 'text' : 'password';
     e.currentTarget.setAttribute('aria-pressed', String(isPass));
+    e.currentTarget.setAttribute('aria-label', isPass ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน');
     e.currentTarget.innerHTML = isPass ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>' : passIcon;
   }));
   document.querySelector('#auth-form').addEventListener('submit', async event => {
@@ -851,6 +852,7 @@ function resetPage() {
     const isPass = input.type === 'password';
     input.type = isPass ? 'text' : 'password';
     e.currentTarget.setAttribute('aria-pressed', String(isPass));
+    e.currentTarget.setAttribute('aria-label', isPass ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน');
     e.currentTarget.innerHTML = isPass ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>' : passIcon;
   }));
   document.querySelector('#reset-form').addEventListener('submit', async event => {
@@ -858,7 +860,7 @@ function resetPage() {
     const form = event.currentTarget;
     const password = form.elements.namedItem('password').value;
     if (password !== form.elements.namedItem('confirm').value) { document.querySelector('#live-message').innerHTML = notice('รหัสผ่านสองช่องไม่ตรงกัน'); return; }
-    const button = form.querySelector('button');
+    const button = form.querySelector('button[type=submit]');
     button.disabled = true;
     const originalText = button.textContent;
     button.textContent = 'กำลังเปลี่ยนรหัสผ่าน...';
